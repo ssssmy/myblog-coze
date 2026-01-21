@@ -986,7 +986,7 @@
         font-weight: 600;
       }
 
-      /* 树形目录样式 */
+      /* 分类树形导航样式 */
       .toc-container {
         padding: 1rem;
         flex: 1;
@@ -1006,63 +1006,109 @@
         border-radius: 3px;
       }
 
-      .toc-list {
+      .category-tree {
         list-style: none;
         padding: 0;
         margin: 0;
       }
 
-      .toc-item {
-        position: relative;
+      /* 分类节点 */
+      .category-node {
+        margin-bottom: 0.5rem;
       }
 
-      .toc-link {
-        display: block;
-        padding: 0.6rem 0.8rem;
+      .category-header {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 0.875rem;
+        background: rgba(167, 139, 250, 0.1);
+        border: 1px solid rgba(167, 139, 250, 0.2);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        user-select: none;
+      }
+
+      .category-header:hover {
+        background: rgba(167, 139, 250, 0.2);
+        border-color: rgba(167, 139, 250, 0.4);
+        transform: translateX(-3px);
+      }
+
+      .category-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+        margin-right: 0.75rem;
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.6);
+        transition: transform 0.3s ease;
+      }
+
+      .category-node.expanded .category-toggle {
+        transform: rotate(90deg);
+      }
+
+      .category-name {
+        flex: 1;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .category-count {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.5);
+        background: rgba(0, 0, 0, 0.3);
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+      }
+
+      /* 文章列表 */
+      .article-list-tree {
+        list-style: none;
+        padding: 0;
+        margin: 0.5rem 0 0 0;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+      }
+
+      .category-node.expanded .article-list-tree {
+        max-height: 1000px;
+      }
+
+      .article-item {
+        padding: 0.625rem 0.875rem;
+        padding-left: 3rem;
         margin-bottom: 0.25rem;
         color: rgba(255, 255, 255, 0.7);
-        text-decoration: none;
-        font-size: 0.9rem;
-        line-height: 1.4;
+        font-size: 0.875rem;
+        cursor: pointer;
         border-radius: 6px;
         transition: all 0.2s ease;
-        cursor: pointer;
         border-left: 2px solid transparent;
       }
 
-      .toc-link:hover {
-        background: rgba(167, 139, 250, 0.1);
+      .article-item:hover {
+        background: rgba(167, 139, 250, 0.08);
         color: white;
-        border-left-color: rgba(167, 139, 250, 0.4);
+        border-left-color: rgba(167, 139, 250, 0.3);
       }
 
-      .toc-link.active {
-        background: rgba(167, 139, 250, 0.2);
+      .article-item.active {
+        background: rgba(167, 139, 250, 0.15);
         color: #a78bfa;
         border-left-color: #a78bfa;
-        font-weight: 600;
+        font-weight: 500;
       }
 
-      /* 不同层级的缩进 */
-      .toc-level-1 .toc-link {
-        font-size: 0.95rem;
-        font-weight: 600;
-        padding-left: 0.8rem;
-      }
-
-      .toc-level-2 .toc-link {
-        padding-left: 1.8rem;
-        font-size: 0.875rem;
-      }
-
-      .toc-level-3 .toc-link {
-        padding-left: 2.8rem;
-        font-size: 0.825rem;
-      }
-
-      .toc-level-4 .toc-link {
-        padding-left: 3.8rem;
-        font-size: 0.775rem;
+      .article-item .article-date {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.4);
+        margin-left: 0.5rem;
       }
 
       /* 空状态提示 */
@@ -1071,14 +1117,6 @@
         padding: 2rem 1rem;
         color: rgba(255, 255, 255, 0.4);
         font-size: 0.875rem;
-      }
-
-      /* 标题锚点样式 */
-      .heading-anchor {
-        position: relative;
-        display: block;
-        top: -3rem; /* 偏移量，让滚动定位更准确 */
-        visibility: hidden;
       }
 
       /* 右侧文章内容 */
@@ -1733,116 +1771,63 @@
         }
       }
 
-      // 从 Markdown 内容中提取标题结构
-      function extractHeadings(markdown) {
-        const headings = [];
-        const lines = markdown.split('\n');
-        let headingCount = 0;
+      // 生成分类树形导航
+      async function generateCategoryTree(currentArticleId = null) {
+        try {
+          const [categoriesData, postsData] = await Promise.all([
+            apiRequest('/categories'),
+            apiRequest('/posts')
+          ]);
 
-        lines.forEach((line, index) => {
-          const headingMatch = line.match(/^(#{1,4})\s+(.+)$/);
-          if (headingMatch) {
-            headingCount++;
-            const level = headingMatch[1].length;
-            const text = headingMatch[2].trim();
-            const id = `heading-${headingCount}`;
+          const categories = categoriesData.data;
+          const posts = postsData.data;
 
-            headings.push({
-              level,
-              text,
-              id,
-              index
-            });
-          }
-        });
+          let html = '<ul class="category-tree">';
 
-        return headings;
-      }
+          categories.forEach(category => {
+            const categoryPosts = posts.filter(post => post.category === category.name);
 
-      // 生成树形目录 HTML
-      function generateTOC(headings) {
-        if (headings.length === 0) {
-          return '<div class="toc-empty">本文无目录结构</div>';
-        }
+            if (categoryPosts.length > 0) {
+              // 判断当前分类是否包含当前文章
+              const isCurrentCategory = currentArticleId && categoryPosts.some(p => p.id === currentArticleId);
 
-        let html = '<ul class="toc-list">';
-        let currentLevel = 1;
+              html += `<li class="category-node ${isCurrentCategory ? 'expanded' : ''}">`;
+              html += `<div class="category-header" onclick="toggleCategory('${category.name}')">`;
+              html += `<span class="category-toggle">▶</span>`;
+              html += `<span class="category-name">${category.name}</span>`;
+              html += `<span class="category-count">${categoryPosts.length}</span>`;
+              html += `</div>`;
 
-        headings.forEach(heading => {
-          html += `<li class="toc-item toc-level-${heading.level}">`;
-          html += `<a class="toc-link" data-target="${heading.id}" onclick="scrollToHeading('${heading.id}')">${heading.text}</a>`;
-          html += '</li>';
-        });
+              // 文章列表
+              html += `<ul class="article-list-tree">`;
+              categoryPosts.forEach(post => {
+                const isActive = post.id === currentArticleId;
+                html += `<li class="article-item ${isActive ? 'active' : ''}" onclick="loadArticleContent(${post.id})">`;
+                html += `<span>${post.title}</span>`;
+                html += `<span class="article-date">${post.date}</span>`;
+                html += `</li>`;
+              });
+              html += `</ul>`;
 
-        html += '</ul>';
-        return html;
-      }
-
-      // 滚动到指定标题
-      function scrollToHeading(headingId) {
-        const targetElement = document.getElementById(headingId);
-        if (targetElement) {
-          const contentArea = document.getElementById('article-content-area');
-          const offset = 20; // 顶部留白
-          const elementPosition = targetElement.offsetTop;
-          const scrollPosition = elementPosition - offset;
-
-          contentArea.scrollTo({
-            top: scrollPosition,
-            behavior: 'smooth'
+              html += `</li>`;
+            }
           });
 
-          // 更新激活状态
-          updateActiveTOC(headingId);
+          html += '</ul>';
+
+          return html;
+        } catch (error) {
+          console.error('生成分类树失败:', error);
+          return '<div class="toc-empty">加载失败</div>';
         }
       }
 
-      // 更新目录激活状态
-      function updateActiveTOC(activeId) {
-        document.querySelectorAll('.toc-link').forEach(link => {
-          link.classList.remove('active');
-          if (link.dataset.target === activeId) {
-            link.classList.add('active');
-          }
-        });
-      }
-
-      // 初始化滚动监听
-      function initScrollListener() {
-        const contentArea = document.getElementById('article-content-area');
-        if (!contentArea) return;
-
-        // 先移除旧的监听器
-        const oldListener = contentArea._scrollListener;
-        if (oldListener) {
-          contentArea.removeEventListener('scroll', oldListener);
-        }
-
-        // 创建新的监听器
-        const scrollListener = () => {
-          const headings = document.querySelectorAll('[id^="heading-"]');
-          let activeId = '';
-
-          if (headings.length === 0) return;
-
-          // 找到当前视口中最近的标题
-          const scrollPosition = contentArea.scrollTop + 100; // 偏移量
-
-          for (let i = headings.length - 1; i >= 0; i--) {
-            const heading = headings[i];
-            if (heading.offsetTop <= scrollPosition) {
-              activeId = heading.id;
-              break;
-            }
-          }
-
-          if (activeId) {
-            updateActiveTOC(activeId);
-          }
-        };
-
-        contentArea._scrollListener = scrollListener;
-        contentArea.addEventListener('scroll', scrollListener);
+      // 切换分类展开/收起
+      function toggleCategory(categoryName) {
+        event.stopPropagation();
+        const categoryHeader = event.currentTarget;
+        const categoryNode = categoryHeader.parentElement;
+        categoryNode.classList.toggle('expanded');
       }
 
       // 加载文章内容到右侧
@@ -1858,27 +1843,12 @@
           // 更新侧边栏标题
           sidebarSubtitle.textContent = `当前阅读：${post.title}`;
 
-          // 提取标题并生成目录
-          const headings = extractHeadings(post.content);
-          const tocHTML = generateTOC(headings);
-          tocContainer.innerHTML = tocHTML;
+          // 重新生成分类树并高亮当前文章
+          const treeHTML = await generateCategoryTree(id);
+          tocContainer.innerHTML = treeHTML;
 
-          // 渲染文章内容，为标题添加 HTML 锚点
-          const lines = post.content.split('\n');
-          const processedLines = lines.map(line => {
-            const headingMatch = line.match(/^(#{1,4})\s+(.+)$/);
-            if (headingMatch) {
-              const level = headingMatch[1].length;
-              const text = headingMatch[2].trim();
-              const heading = headings.find(h => h.text === text);
-              if (heading) {
-                return `<a id="${heading.id}" class="heading-anchor"></a>\n${'#'.repeat(level)} ${text}`;
-              }
-            }
-            return line;
-          });
-          const processedMarkdown = processedLines.join('\n');
-          const renderedContent = marked.parse(processedMarkdown);
+          // 渲染文章内容
+          const renderedContent = marked.parse(post.content);
 
           articleContentArea.innerHTML = `
             <div class="article-header">
@@ -1892,14 +1862,11 @@
               ${renderedContent}
             </div>
           `;
-
-          // 初始化滚动监听
-          initScrollListener();
         } catch (error) {
           console.error('加载文章内容失败:', error);
         }
       }
-      
+
       // 加载分类统计数据
       async function loadCategoryStats() {
         try {
@@ -2043,7 +2010,7 @@
       window.showPostDetail = showPostDetail;
       window.loadArticleContent = loadArticleContent;
       window.filterByCategory = filterByCategory;
-      window.scrollToHeading = scrollToHeading;
+      window.toggleCategory = toggleCategory;
     </script>
   </body>
 </html>
