@@ -13,252 +13,401 @@
       }
       body {
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-        background-color: #f9fafb;
+        background-color: #0f172a;
         min-height: 100vh;
-      }
-      header {
-        background-color: white;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-        padding: 1rem;
-        position: sticky;
-        top: 0;
-        z-index: 50;
-      }
-      header .container {
-        max-width: 1200px;
-        margin: 0 auto;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-      header h1 {
-        font-size: 24px;
-        font-weight: bold;
-        color: #1f2937;
-        cursor: pointer;
-      }
-      header nav a {
-        color: #4b5563;
-        text-decoration: none;
-        margin-left: 24px;
-        transition: color 0.15s;
-        cursor: pointer;
-      }
-      header nav a:hover {
-        color: #2563eb;
-      }
-      header nav a.active {
-        color: #2563eb;
-        font-weight: 600;
-      }
-      main {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 32px 16px;
-      }
-      .post {
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-        padding: 24px;
-        margin-bottom: 24px;
-        transition: box-shadow 0.15s;
-      }
-      .post:hover {
-        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
-      }
-      .post h2 {
-        font-size: 24px;
-        font-weight: bold;
-        color: #1f2937;
-        margin-bottom: 12px;
-        cursor: pointer;
-        transition: color 0.15s;
-      }
-      .post h2:hover {
-        color: #2563eb;
-      }
-      .post .meta {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        margin-bottom: 16px;
-      }
-      .post .category {
-        background-color: #dbeafe;
-        color: #2563eb;
-        padding: 4px 12px;
-        border-radius: 9999px;
-        font-size: 14px;
-        font-weight: 500;
-      }
-      .post .date {
-        color: #6b7280;
-        font-size: 14px;
-      }
-      .post p {
-        color: #4b5563;
-        line-height: 1.75;
-        margin-bottom: 16px;
-      }
-      footer {
-        background-color: #1f2937;
         color: white;
-        padding: 32px 16px;
-        margin-top: 64px;
-        text-align: center;
       }
+      
+      /* 首页样式 */
+      .hero {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.1" d="M0,192L48,197.3C96,203,192,213,288,229.3C384,245,480,267,576,250.7C672,235,768,181,864,181.3C960,181,1056,235,1152,234.7C1248,235,1344,181,1392,154.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
+        background-size: cover;
+        background-position: bottom;
+        animation: float 6s ease-in-out infinite;
+      }
+      
+      @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-20px); }
+      }
+      
+      .hero-content {
+        text-align: center;
+        z-index: 1;
+        animation: fadeInUp 1s ease-out;
+      }
+      
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      
+      .hero h1 {
+        font-size: 4rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        background: linear-gradient(135deg, #fff 0%, #f0f0f0 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      
+      .hero p {
+        font-size: 1.5rem;
+        color: rgba(255,255,255,0.9);
+        margin-bottom: 3rem;
+        max-width: 600px;
+        line-height: 1.6;
+      }
+      
+      .category-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 2rem;
+        max-width: 1200px;
+        width: 100%;
+        animation: fadeInUp 1s ease-out 0.3s backwards;
+      }
+      
+      .category-card {
+        background: rgba(255,255,255,0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 20px;
+        padding: 2.5rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .category-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+      
+      .category-card:hover::before {
+        opacity: 1;
+      }
+      
+      .category-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        border-color: rgba(255,255,255,0.4);
+      }
+      
+      .category-card .icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        display: block;
+      }
+      
+      .category-card h3 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+      }
+      
+      .category-card .count {
+        color: rgba(255,255,255,0.7);
+        font-size: 1rem;
+      }
+      
+      .tech-card { background: linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(139, 92, 246, 0.3) 100%); }
+      .life-card { background: linear-gradient(135deg, rgba(16, 185, 129, 0.3) 0%, rgba(5, 150, 105, 0.3) 100%); }
+      .essay-card { background: linear-gradient(135deg, rgba(245, 158, 11, 0.3) 0%, rgba(217, 119, 6, 0.3) 100%); }
+      .all-card { background: linear-gradient(135deg, rgba(236, 72, 153, 0.3) 0%, rgba(219, 39, 119, 0.3) 100%); }
+      
+      /* 文章列表页面样式 */
+      .posts-page {
+        display: none;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+        animation: fadeIn 0.5s ease-out;
+      }
+      
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      
+      .page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+      }
+      
+      .page-header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+      }
+      
+      .back-btn {
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.2);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 1rem;
+      }
+      
+      .back-btn:hover {
+        background: rgba(255,255,255,0.2);
+        transform: translateX(-5px);
+      }
+      
+      .post-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 2rem;
+      }
+      
+      .post-card {
+        background: rgba(255,255,255,0.05);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 16px;
+        padding: 2rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+      
+      .post-card:hover {
+        transform: translateY(-5px);
+        background: rgba(255,255,255,0.08);
+        border-color: rgba(255,255,255,0.2);
+      }
+      
+      .post-card .post-category {
+        display: inline-block;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+      }
+      
+      .post-card h3 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+        line-height: 1.4;
+      }
+      
+      .post-card .post-date {
+        color: rgba(255,255,255,0.6);
+        font-size: 0.875rem;
+        margin-bottom: 1rem;
+      }
+      
+      .post-card p {
+        color: rgba(255,255,255,0.7);
+        line-height: 1.6;
+        font-size: 1rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      
       .no-posts {
         text-align: center;
-        padding: 48px;
-        color: #6b7280;
-        font-size: 18px;
+        padding: 4rem;
+        color: rgba(255,255,255,0.6);
+        font-size: 1.25rem;
       }
-      .read-more {
-        color: #2563eb;
-        font-weight: 500;
-        cursor: pointer;
-        transition: color 0.15s;
-      }
-      .read-more:hover {
-        color: #1d4ed8;
+      
+      @media (max-width: 768px) {
+        .hero h1 {
+          font-size: 2.5rem;
+        }
+        .hero p {
+          font-size: 1.1rem;
+        }
+        .category-cards {
+          grid-template-columns: 1fr;
+        }
+        .page-header {
+          flex-direction: column;
+          gap: 1rem;
+          text-align: center;
+        }
       }
     </style>
   </head>
   <body>
-    <header>
-      <div class="container">
-        <h1 onclick="showAllPosts()">我的博客</h1>
-        <nav>
-          <a href="#" data-category="全部" class="active" onclick="filterByCategory(event, '全部')">全部</a>
-          <a href="#" data-category="技术" onclick="filterByCategory(event, '技术')">技术</a>
-          <a href="#" data-category="生活" onclick="filterByCategory(event, '生活')">生活</a>
-          <a href="#" data-category="随笔" onclick="filterByCategory(event, '随笔')">随笔</a>
-        </nav>
+    <!-- 首页 -->
+    <div id="hero" class="hero">
+      <div class="hero-content">
+        <h1>✨ 我的博客</h1>
+        <p>探索技术、分享生活、记录感悟</p>
+        
+        <div class="category-cards">
+          <div class="category-card all-card" onclick="showPosts('全部')">
+            <span class="icon">📚</span>
+            <h3>全部文章</h3>
+            <p class="count">6 篇文章</p>
+          </div>
+          
+          <div class="category-card tech-card" onclick="showPosts('技术')">
+            <span class="icon">💻</span>
+            <h3>技术</h3>
+            <p class="count">3 篇文章</p>
+          </div>
+          
+          <div class="category-card life-card" onclick="showPosts('生活')">
+            <span class="icon">🌱</span>
+            <h3>生活</h3>
+            <p class="count">2 篇文章</p>
+          </div>
+          
+          <div class="category-card essay-card" onclick="showPosts('随笔')">
+            <span class="icon">✍️</span>
+            <h3>随笔</h3>
+            <p class="count">1 篇文章</p>
+          </div>
+        </div>
       </div>
-    </header>
+    </div>
     
-    <main>
-      <h1 id="page-title" style="font-size: 36px; font-weight: bold; color: #1f2937; margin-bottom: 32px;">全部文章</h1>
+    <!-- 文章列表页面 -->
+    <div id="posts-page" class="posts-page">
+      <div class="page-header">
+        <h1 id="page-title">全部文章</h1>
+        <button class="back-btn" onclick="goHome()">← 返回首页</button>
+      </div>
       
-      <div id="posts-container">
-        <article class="post" data-category="技术">
-          <div class="meta">
-            <span class="category">技术</span>
-            <span class="date">2024-01-15</span>
-          </div>
-          <h2 onclick="showPostDetail('Vue 3 Composition API 深入理解')">Vue 3 Composition API 深入理解</h2>
-          <p>Vue 3 的 Composition API 为我们提供了更灵活的代码组织方式。本文将深入探讨其核心概念、使用场景以及最佳实践。</p>
-          <span class="read-more" onclick="showPostDetail('Vue 3 Composition API 深入理解')">阅读更多 →</span>
-        </article>
-        
-        <article class="post" data-category="技术">
-          <div class="meta">
-            <span class="category">技术</span>
-            <span class="date">2024-01-10</span>
-          </div>
-          <h2 onclick="showPostDetail('TypeScript 高级类型技巧')">TypeScript 高级类型技巧</h2>
-          <p>掌握 TypeScript 的高级类型特性，可以让你的代码更加健壮和类型安全。本文介绍泛型、条件类型、映射类型等高级技巧。</p>
-          <span class="read-more" onclick="showPostDetail('TypeScript 高级类型技巧')">阅读更多 →</span>
-        </article>
-        
-        <article class="post" data-category="随笔">
-          <div class="meta">
-            <span class="category">随笔</span>
-            <span class="date">2024-01-05</span>
-          </div>
-          <h2 onclick="showPostDetail('我的程序员工涯感悟')">我的程序员工涯感悟</h2>
-          <p>作为一个程序员，我经历了从学生到职场人的转变。在这篇文章中，我分享一些关于职业发展的思考和感悟。</p>
-          <span class="read-more" onclick="showPostDetail('我的程序员工涯感悟')">阅读更多 →</span>
-        </article>
-        
-        <article class="post" data-category="生活">
-          <div class="meta">
-            <span class="category">生活</span>
-            <span class="date">2024-01-01</span>
-          </div>
-          <h2 onclick="showPostDetail('如何保持高效的学习状态')">如何保持高效的学习状态</h2>
-          <p>在快速变化的技术领域，持续学习是必不可少的。本文分享一些我在学习过程中总结的方法和技巧。</p>
-          <span class="read-more" onclick="showPostDetail('如何保持高效的学习状态')">阅读更多 →</span>
-        </article>
-        
-        <article class="post" data-category="技术">
-          <div class="meta">
-            <span class="category">技术</span>
-            <span class="date">2023-12-28</span>
-          </div>
-          <h2 onclick="showPostDetail('前端性能优化实战指南')">前端性能优化实战指南</h2>
-          <p>从代码层面到架构层面，全方位介绍前端性能优化的策略和最佳实践，帮助你构建更快的 Web 应用。</p>
-          <span class="read-more" onclick="showPostDetail('前端性能优化实战指南')">阅读更多 →</span>
-        </article>
-        
-        <article class="post" data-category="生活">
-          <div class="meta">
-            <span class="category">生活</span>
-            <span class="date">2023-12-25</span>
-          </div>
-          <h2 onclick="showPostDetail('周末的咖啡时光')">周末的咖啡时光</h2>
-          <p>在一个阳光明媚的周末，我来到了一家安静的咖啡馆，享受难得的闲暇时光。</p>
-          <span class="read-more" onclick="showPostDetail('周末的咖啡时光')">阅读更多 →</span>
-        </article>
+      <div id="posts-container" class="post-grid">
+        <!-- 文章卡片会动态生成 -->
       </div>
-    </main>
-    
-    <footer>
-      <p>© 2024 我的博客. 保留所有权利.</p>
-    </footer>
+    </div>
 
     <script>
-      function filterByCategory(event, category) {
-        event.preventDefault();
-        
-        // 更新导航激活状态
-        const navLinks = document.querySelectorAll('header nav a');
-        navLinks.forEach(link => {
-          link.classList.remove('active');
-          if (link.dataset.category === category) {
-            link.classList.add('active');
-          }
-        });
-        
-        // 更新页面标题
+      const posts = [
+        {
+          id: 1,
+          title: 'Vue 3 Composition API 深入理解',
+          excerpt: 'Vue 3 的 Composition API 为我们提供了更灵活的代码组织方式。本文将深入探讨其核心概念、使用场景以及最佳实践。',
+          category: '技术',
+          date: '2024-01-15'
+        },
+        {
+          id: 2,
+          title: 'TypeScript 高级类型技巧',
+          excerpt: '掌握 TypeScript 的高级类型特性，可以让你的代码更加健壮和类型安全。本文介绍泛型、条件类型、映射类型等高级技巧。',
+          category: '技术',
+          date: '2024-01-10'
+        },
+        {
+          id: 3,
+          title: '我的程序员工涯感悟',
+          excerpt: '作为一个程序员，我经历了从学生到职场人的转变。在这篇文章中，我分享一些关于职业发展的思考和感悟。',
+          category: '随笔',
+          date: '2024-01-05'
+        },
+        {
+          id: 4,
+          title: '如何保持高效的学习状态',
+          excerpt: '在快速变化的技术领域，持续学习是必不可少的。本文分享一些我在学习过程中总结的方法和技巧。',
+          category: '生活',
+          date: '2024-01-01'
+        },
+        {
+          id: 5,
+          title: '前端性能优化实战指南',
+          excerpt: '从代码层面到架构层面，全方位介绍前端性能优化的策略和最佳实践，帮助你构建更快的 Web 应用。',
+          category: '技术',
+          date: '2023-12-28'
+        },
+        {
+          id: 6,
+          title: '周末的咖啡时光',
+          excerpt: '在一个阳光明媚的周末，我来到了一家安静的咖啡馆，享受难得的闲暇时光。',
+          category: '生活',
+          date: '2023-12-25'
+        }
+      ];
+      
+      function showPosts(category) {
+        const hero = document.getElementById('hero');
+        const postsPage = document.getElementById('posts-page');
         const pageTitle = document.getElementById('page-title');
+        const postsContainer = document.getElementById('posts-container');
+        
+        // 隐藏首页，显示文章列表
+        hero.style.display = 'none';
+        postsPage.style.display = 'block';
+        
+        // 更新标题
         pageTitle.textContent = category === '全部' ? '全部文章' : category + '文章';
         
         // 筛选文章
-        const posts = document.querySelectorAll('.post');
-        let hasVisiblePosts = false;
+        const filteredPosts = category === '全部' 
+          ? posts 
+          : posts.filter(post => post.category === category);
         
-        posts.forEach(post => {
-          const postCategory = post.dataset.category;
-          if (category === '全部' || postCategory === category) {
-            post.style.display = 'block';
-            hasVisiblePosts = true;
-          } else {
-            post.style.display = 'none';
-          }
-        });
-        
-        // 如果没有文章，显示提示
-        const container = document.getElementById('posts-container');
-        const noPosts = container.querySelector('.no-posts');
-        
-        if (!hasVisiblePosts) {
-          if (!noPosts) {
-            const noPostsMsg = document.createElement('div');
-            noPostsMsg.className = 'no-posts';
-            noPostsMsg.textContent = '该分类下暂无文章';
-            container.appendChild(noPostsMsg);
-          }
+        // 生成文章卡片
+        if (filteredPosts.length === 0) {
+          postsContainer.innerHTML = '<div class="no-posts">该分类下暂无文章</div>';
         } else {
-          if (noPosts) {
-            noPosts.remove();
-          }
+          postsContainer.innerHTML = filteredPosts.map(post => `
+            <div class="post-card" onclick="showPostDetail('${post.title}')">
+              <span class="post-category">${post.category}</span>
+              <h3>${post.title}</h3>
+              <p class="post-date">${post.date}</p>
+              <p>${post.excerpt}</p>
+            </div>
+          `).join('');
         }
       }
       
-      function showAllPosts() {
-        filterByCategory({ preventDefault: () => {} }, '全部');
+      function goHome() {
+        const hero = document.getElementById('hero');
+        const postsPage = document.getElementById('posts-page');
+        
+        hero.style.display = 'flex';
+        postsPage.style.display = 'none';
       }
       
       function showPostDetail(title) {
