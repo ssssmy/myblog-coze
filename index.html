@@ -605,7 +605,6 @@
         display: flex;
         flex-direction: column;
         height: 100%;
-        overflow: hidden;
         flex-shrink: 0;
         position: relative;
       }
@@ -709,12 +708,12 @@
         position: absolute;
         top: 0;
         right: 0;
-        width: 6px;
+        width: 10px;
         height: 100%;
         background: transparent;
         cursor: col-resize;
         transition: background 0.2s ease;
-        z-index: 100;
+        z-index: 1000;
         user-select: none;
       }
       
@@ -915,7 +914,6 @@
         display: flex;
         flex-direction: column;
         height: 100%;
-        overflow: hidden;
         flex-shrink: 0;
         position: relative;
       }
@@ -925,12 +923,12 @@
         position: absolute;
         top: 0;
         right: 0;
-        width: 6px;
+        width: 10px;
         height: 100%;
         background: transparent;
         cursor: col-resize;
         transition: background 0.2s ease;
-        z-index: 100;
+        z-index: 1000;
         user-select: none;
       }
       
@@ -1624,6 +1622,9 @@
         // 加载分类列表
         await loadCategoryList();
         
+        // 重新初始化拖动功能（确保事件监听器正确绑定）
+        initSidebarResize('category-resize-handle', 'category-sidebar', 250, 500);
+        
         // 高亮当前分类
         updateActiveCategory(category);
         
@@ -1717,6 +1718,9 @@
           
           // 加载所有文章到左侧列表
           await loadArticleList();
+          
+          // 重新初始化拖动功能（确保事件监听器正确绑定）
+          initSidebarResize('article-resize-handle', 'article-sidebar', 250, 500);
           
           // 加载并显示当前文章
           await loadArticleContent(id);
@@ -1946,78 +1950,113 @@
         );
       }
       
+      // 全局变量跟踪拖动状态
+      const resizeState = {
+        isResizing: false,
+        currentHandle: null,
+        currentSidebar: null,
+        minWidth: 0,
+        maxWidth: 0,
+        startX: 0,
+        startWidth: 0
+      };
+      
+      // 全局鼠标事件监听器（只绑定一次）
+      document.addEventListener('mousemove', (e) => {
+        if (!resizeState.isResizing) return;
+        
+        const dx = e.clientX - resizeState.startX;
+        let newWidth = resizeState.startWidth + dx;
+        
+        // 限制宽度范围
+        newWidth = Math.max(resizeState.minWidth, Math.min(resizeState.maxWidth, newWidth));
+        
+        if (resizeState.currentSidebar) {
+          resizeState.currentSidebar.style.width = `${newWidth}px`;
+        }
+      });
+      
+      document.addEventListener('mouseup', () => {
+        if (resizeState.isResizing && resizeState.currentHandle) {
+          resizeState.isResizing = false;
+          resizeState.currentHandle.classList.remove('resizing');
+          resizeState.currentHandle = null;
+          resizeState.currentSidebar = null;
+        }
+      });
+      
+      // 全局触摸事件监听器（只绑定一次）
+      document.addEventListener('touchmove', (e) => {
+        if (!resizeState.isResizing) return;
+        
+        const dx = e.touches[0].clientX - resizeState.startX;
+        let newWidth = resizeState.startWidth + dx;
+        
+        // 限制宽度范围
+        newWidth = Math.max(resizeState.minWidth, Math.min(resizeState.maxWidth, newWidth));
+        
+        if (resizeState.currentSidebar) {
+          resizeState.currentSidebar.style.width = `${newWidth}px`;
+        }
+        
+        // 防止滚动
+        e.preventDefault();
+      }, { passive: false });
+      
+      document.addEventListener('touchend', () => {
+        if (resizeState.isResizing && resizeState.currentHandle) {
+          resizeState.isResizing = false;
+          resizeState.currentHandle.classList.remove('resizing');
+          resizeState.currentHandle = null;
+          resizeState.currentSidebar = null;
+        }
+      });
+      
       function initSidebarResize(handleId, sidebarId, minWidth, maxWidth) {
         const handle = document.getElementById(handleId);
         const sidebar = document.getElementById(sidebarId);
         
-        if (!handle || !sidebar) return;
+        if (!handle || !sidebar) {
+          return;
+        }
         
-        let isResizing = false;
-        let startX = 0;
-        let startWidth = 0;
+        // 检查是否已经初始化过
+        if (handle.dataset.initialized === 'true') {
+          return;
+        }
         
         // 鼠标事件处理
         handle.addEventListener('mousedown', (e) => {
-          isResizing = true;
-          startX = e.clientX;
-          startWidth = sidebar.offsetWidth;
+          resizeState.isResizing = true;
+          resizeState.currentHandle = handle;
+          resizeState.currentSidebar = sidebar;
+          resizeState.minWidth = minWidth;
+          resizeState.maxWidth = maxWidth;
+          resizeState.startX = e.clientX;
+          resizeState.startWidth = sidebar.offsetWidth;
           handle.classList.add('resizing');
           
           // 防止选中文本
           e.preventDefault();
         });
         
-        document.addEventListener('mousemove', (e) => {
-          if (!isResizing) return;
-          
-          const dx = e.clientX - startX;
-          let newWidth = startWidth + dx;
-          
-          // 限制宽度范围
-          newWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
-          
-          sidebar.style.width = `${newWidth}px`;
-        });
-        
-        document.addEventListener('mouseup', () => {
-          if (isResizing) {
-            isResizing = false;
-            handle.classList.remove('resizing');
-          }
-        });
-        
         // 触摸事件处理（支持移动端）
         handle.addEventListener('touchstart', (e) => {
-          isResizing = true;
-          startX = e.touches[0].clientX;
-          startWidth = sidebar.offsetWidth;
+          resizeState.isResizing = true;
+          resizeState.currentHandle = handle;
+          resizeState.currentSidebar = sidebar;
+          resizeState.minWidth = minWidth;
+          resizeState.maxWidth = maxWidth;
+          resizeState.startX = e.touches[0].clientX;
+          resizeState.startWidth = sidebar.offsetWidth;
           handle.classList.add('resizing');
           
           // 防止滚动
           e.preventDefault();
         }, { passive: false });
         
-        document.addEventListener('touchmove', (e) => {
-          if (!isResizing) return;
-          
-          const dx = e.touches[0].clientX - startX;
-          let newWidth = startWidth + dx;
-          
-          // 限制宽度范围
-          newWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
-          
-          sidebar.style.width = `${newWidth}px`;
-          
-          // 防止滚动
-          e.preventDefault();
-        }, { passive: false });
-        
-        document.addEventListener('touchend', () => {
-          if (isResizing) {
-            isResizing = false;
-            handle.classList.remove('resizing');
-          }
-        });
+        // 标记为已初始化
+        handle.dataset.initialized = 'true';
       }
       
       // 将函数暴露到全局作用域，以便 HTML onclick 可以访问
