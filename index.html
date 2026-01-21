@@ -186,6 +186,7 @@
         right: 20px;
         z-index: 1000;
         font-family: 'Courier New', monospace;
+        transition: opacity 0.3s ease, transform 0.3s ease;
       }
       
       .profile-hud {
@@ -1126,7 +1127,35 @@
         
         // 加载个人信息
         await loadProfile();
+        
+        // 添加滚动淡化效果
+        window.addEventListener('scroll', handleScrollFade);
       });
+      
+      // 处理滚动淡化效果
+      function handleScrollFade() {
+        const profileHud = document.getElementById('profile-hud');
+        const scrollY = window.scrollY;
+        const vh = window.innerHeight;
+        
+        // 计算透明度：滚动距离越小，透明度越高
+        // 当滚动距离达到视口高度时，透明度为0
+        let opacity = 1 - (scrollY / vh);
+        opacity = Math.max(0, Math.min(1, opacity));
+        
+        // 添加轻微的上移效果
+        const translateY = scrollY * 0.3;
+        
+        profileHud.style.opacity = opacity.toString();
+        profileHud.style.transform = `translateY(${translateY}px)`;
+        
+        // 当完全隐藏时，禁用交互
+        if (opacity <= 0) {
+          profileHud.style.pointerEvents = 'none';
+        } else {
+          profileHud.style.pointerEvents = 'auto';
+        }
+      }
       
       // 将函数暴露到全局作用域，以便 HTML onclick 可以访问
       window.showPosts = showPosts;
