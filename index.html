@@ -27,15 +27,64 @@
         width: 100%;
         height: 100%;
         z-index: -1;
-        background: radial-gradient(ellipse at 20% 20%, rgba(120, 0, 255, 0.3) 0%, transparent 50%),
-                    radial-gradient(ellipse at 80% 80%, rgba(0, 200, 255, 0.3) 0%, transparent 50%),
-                    radial-gradient(ellipse at 50% 50%, rgba(255, 0, 150, 0.15) 0%, transparent 70%);
+        background: 
+          radial-gradient(ellipse at 20% 20%, rgba(120, 0, 255, 0.4) 0%, transparent 50%),
+          radial-gradient(ellipse at 80% 80%, rgba(0, 200, 255, 0.4) 0%, transparent 50%),
+          radial-gradient(ellipse at 50% 50%, rgba(255, 0, 150, 0.25) 0%, transparent 70%),
+          linear-gradient(135deg, #0a0a0a 0%, #1a0a2e 50%, #0a1628 100%);
         animation: pulse 8s ease-in-out infinite;
       }
-      
+
       @keyframes pulse {
-        0%, 100% { opacity: 0.6; transform: scale(1); }
-        50% { opacity: 1; transform: scale(1.1); }
+        0%, 100% { opacity: 0.8; transform: scale(1); }
+        50% { opacity: 1; transform: scale(1.05); }
+      }
+
+      /* 科技网格背景 */
+      .grid-background {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        opacity: 0.15;
+        background-image: 
+          linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
+        background-size: 50px 50px;
+        animation: gridMove 20s linear infinite;
+      }
+
+      @keyframes gridMove {
+        0% { transform: perspective(500px) rotateX(60deg) translateY(0); }
+        100% { transform: perspective(500px) rotateX(60deg) translateY(50px); }
+      }
+
+      /* 动态光带 */
+      .light-beams {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        overflow: hidden;
+        pointer-events: none;
+      }
+
+      .light-beam {
+        position: absolute;
+        width: 2px;
+        height: 100%;
+        background: linear-gradient(to bottom, transparent, #00ffff, transparent);
+        opacity: 0;
+        animation: beamMove 4s ease-in-out infinite;
+      }
+
+      @keyframes beamMove {
+        0%, 100% { opacity: 0; transform: translateY(-100%); }
+        50% { opacity: 0.6; transform: translateY(100%); }
       }
       
       /* 粒子效果 */
@@ -48,7 +97,7 @@
         z-index: -1;
         pointer-events: none;
       }
-      
+
       .particle {
         position: absolute;
         width: 4px;
@@ -56,8 +105,9 @@
         background: rgba(255, 255, 255, 0.6);
         border-radius: 50%;
         animation: floatParticle 15s infinite;
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
       }
-      
+
       @keyframes floatParticle {
         0%, 100% {
           transform: translateY(0) translateX(0) scale(1);
@@ -73,6 +123,59 @@
           transform: translateY(-100vh) translateX(100px) scale(0);
           opacity: 0;
         }
+      }
+
+      /* 流星效果 */
+      .meteors {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        pointer-events: none;
+      }
+
+      .meteor {
+        position: absolute;
+        width: 2px;
+        height: 80px;
+        background: linear-gradient(to bottom, #00ffff, transparent);
+        border-radius: 50%;
+        opacity: 0;
+        animation: meteorFall 5s linear infinite;
+        transform: rotate(-45deg);
+      }
+
+      @keyframes meteorFall {
+        0% {
+          opacity: 0;
+          transform: translateX(0) translateY(-100px) rotate(-45deg);
+        }
+        5% {
+          opacity: 1;
+        }
+        15% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0;
+          transform: translateX(300px) translateY(800px) rotate(-45deg);
+        }
+      }
+
+      /* 鼠标跟随光效 */
+      .cursor-glow {
+        position: fixed;
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(167, 139, 250, 0.3) 0%, transparent 70%);
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 0;
+        transform: translate(-50%, -50%);
+        mix-blend-mode: screen;
+        transition: opacity 0.3s ease;
       }
       
       /* 主页容器 */
@@ -95,14 +198,91 @@
         left: 50%;
         transform: translateX(-50%);
         width: 60%;
-        height: 2px;
-        background: linear-gradient(90deg, transparent, #7c3aed, transparent);
-        animation: expandLine 2s ease-out;
+        height: 3px;
+        background: linear-gradient(90deg, transparent, #7c3aed, #60a5fa, #7c3aed, transparent);
+        background-size: 200% 100%;
+        animation: expandLine 2s ease-out, glowLine 3s linear infinite 2s;
+        box-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
       }
-      
+
       @keyframes expandLine {
         from { width: 0; }
         to { width: 60%; }
+      }
+
+      /* 添加动态角落装饰 */
+      .corner-decoration {
+        position: absolute;
+        width: 100px;
+        height: 100px;
+        pointer-events: none;
+      }
+
+      .corner-decoration::before,
+      .corner-decoration::after {
+        content: '';
+        position: absolute;
+        background: linear-gradient(90deg, #a78bfa, transparent);
+      }
+
+      .corner-decoration.top-left {
+        top: 20px;
+        left: 20px;
+      }
+
+      .corner-decoration.top-left::before {
+        top: 0;
+        left: 0;
+        width: 50px;
+        height: 2px;
+      }
+
+      .corner-decoration.top-left::after {
+        top: 0;
+        left: 0;
+        width: 2px;
+        height: 50px;
+      }
+
+      .corner-decoration.bottom-right {
+        bottom: 20px;
+        right: 20px;
+      }
+
+      .corner-decoration.bottom-right::before {
+        bottom: 0;
+        right: 0;
+        width: 50px;
+        height: 2px;
+      }
+
+      .corner-decoration.bottom-right::after {
+        bottom: 0;
+        right: 0;
+        width: 2px;
+        height: 50px;
+      }
+
+      /* 添加动态边框光效 */
+      .hero::before {
+        content: '';
+        position: absolute;
+        inset: 20px;
+        border: 1px solid rgba(167, 139, 250, 0.2);
+        border-radius: 20px;
+        pointer-events: none;
+        animation: borderPulse 4s ease-in-out infinite;
+      }
+
+      @keyframes borderPulse {
+        0%, 100% {
+          opacity: 0.3;
+          border-color: rgba(167, 139, 250, 0.2);
+        }
+        50% {
+          opacity: 0.8;
+          border-color: rgba(167, 139, 250, 0.5);
+        }
       }
       
       /* 问候语 */
@@ -124,7 +304,7 @@
         }
       }
       
-      /* 主标题 */
+      /* 主标题 - 霓虹灯故障效果 */
       .main-title {
         font-size: clamp(3rem, 8vw, 6rem);
         font-weight: 900;
@@ -136,9 +316,56 @@
         -webkit-text-fill-color: transparent;
         background-clip: text;
         animation: gradient 3s linear infinite, fadeInUp 1s ease-out 0.3s backwards;
-        text-shadow: 0 0 40px rgba(139, 92, 246, 0.5);
+        text-shadow: 
+          0 0 20px rgba(139, 92, 246, 0.8),
+          0 0 40px rgba(139, 92, 246, 0.6),
+          0 0 60px rgba(139, 92, 246, 0.4),
+          0 0 80px rgba(139, 92, 246, 0.2);
+        position: relative;
       }
-      
+
+      .main-title::before,
+      .main-title::after {
+        content: attr(data-text);
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #fff 0%, #a78bfa 25%, #60a5fa 50%, #a78bfa 75%, #fff 100%);
+        background-size: 200% auto;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        opacity: 0.8;
+      }
+
+      .main-title::before {
+        animation: glitch-1 2s infinite linear alternate-reverse;
+        clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
+      }
+
+      .main-title::after {
+        animation: glitch-2 2s infinite linear alternate-reverse;
+        clip-path: polygon(0 55%, 100% 55%, 100% 100%, 0 100%);
+      }
+
+      @keyframes glitch-1 {
+        0%, 100% { transform: translate(0); }
+        20% { transform: translate(-2px, 2px); }
+        40% { transform: translate(-2px, -2px); }
+        60% { transform: translate(2px, 2px); }
+        80% { transform: translate(2px, -2px); }
+      }
+
+      @keyframes glitch-2 {
+        0%, 100% { transform: translate(0); }
+        20% { transform: translate(2px, -2px); }
+        40% { transform: translate(2px, 2px); }
+        60% { transform: translate(-2px, -2px); }
+        80% { transform: translate(-2px, 2px); }
+      }
+
       @keyframes gradient {
         to { background-position: 200% center; }
       }
@@ -162,18 +389,21 @@
         text-align: center;
         animation: fadeInUp 1s ease-out 0.6s backwards;
         min-height: 3rem;
+        position: relative;
+        text-shadow: 0 0 20px rgba(167, 139, 250, 0.3);
       }
-      
+
       .subtitle .typing-cursor {
         display: inline-block;
-        width: 3px;
+        width: 4px;
         height: 1.2em;
-        background: #a78bfa;
+        background: linear-gradient(180deg, #a78bfa, #60a5fa);
         margin-left: 4px;
         animation: blink 1s infinite;
         vertical-align: middle;
+        box-shadow: 0 0 10px rgba(167, 139, 250, 0.8);
       }
-      
+
       @keyframes blink {
         0%, 50% { opacity: 1; }
         51%, 100% { opacity: 0; }
@@ -395,23 +625,50 @@
         margin-bottom: 4rem;
         animation: fadeInUp 1s ease-out 1.1s backwards;
       }
-      
+
       .stat-item {
         text-align: center;
-        padding: 1.5rem 2.5rem;
+        padding: 2rem 3rem;
         background: rgba(255,255,255,0.05);
         backdrop-filter: blur(10px);
         border: 1px solid rgba(255,255,255,0.1);
         border-radius: 20px;
-        transition: all 0.3s ease;
+        transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+        position: relative;
+        overflow: hidden;
       }
-      
+
+      .stat-item::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #a78bfa, #60a5fa, #a78bfa);
+        background-size: 200% 100%;
+        transform: scaleX(0);
+        transition: transform 0.4s ease;
+      }
+
       .stat-item:hover {
-        transform: translateY(-5px);
-        border-color: rgba(167, 139, 250, 0.5);
-        box-shadow: 0 20px 40px rgba(139, 92, 246, 0.2);
+        transform: translateY(-10px) scale(1.05);
+        border-color: rgba(167, 139, 250, 0.6);
+        box-shadow:
+          0 25px 50px rgba(139, 92, 246, 0.3),
+          0 0 100px rgba(139, 92, 246, 0.15);
       }
-      
+
+      .stat-item:hover::before {
+        transform: scaleX(1);
+        animation: glowLine 2s linear infinite;
+      }
+
+      @keyframes glowLine {
+        0% { background-position: 0% 0%; }
+        100% { background-position: 200% 0%; }
+      }
+
       .stat-item .number {
         font-size: 2.5rem;
         font-weight: 800;
@@ -420,8 +677,15 @@
         -webkit-text-fill-color: transparent;
         background-clip: text;
         margin-bottom: 0.5rem;
+        position: relative;
       }
-      
+
+      .stat-item:hover .number {
+        text-shadow:
+          0 0 20px rgba(167, 139, 250, 0.5),
+          0 0 40px rgba(96, 165, 250, 0.3);
+      }
+
       .stat-item .label {
         font-size: 1rem;
         color: rgba(255,255,255,0.7);
@@ -437,7 +701,7 @@
         margin: 0 auto;
         animation: fadeInUp 1s ease-out 1.2s backwards;
       }
-      
+
       .section-title {
         font-size: 1.5rem;
         font-weight: 700;
@@ -446,15 +710,35 @@
         color: rgba(255,255,255,0.9);
         text-transform: uppercase;
         letter-spacing: 4px;
+        position: relative;
       }
-      
+
+      .section-title::before,
+      .section-title::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        width: 100px;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, #a78bfa);
+      }
+
+      .section-title::before {
+        right: calc(100% + 20px);
+      }
+
+      .section-title::after {
+        left: calc(100% + 20px);
+        transform: scaleX(-1);
+      }
+
       .category-cards {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
         gap: 2rem;
-        perspective: 1000px;
+        perspective: 1500px;
       }
-      
+
       .category-card {
         background: rgba(255,255,255,0.03);
         backdrop-filter: blur(20px);
@@ -468,7 +752,7 @@
         overflow: hidden;
         transform-style: preserve-3d;
       }
-      
+
       .category-card::before {
         content: '';
         position: absolute;
@@ -478,22 +762,22 @@
         height: 200%;
         background: conic-gradient(
           transparent,
-          rgba(167, 139, 250, 0.1),
+          rgba(167, 139, 250, 0.15),
           transparent 30%
         );
         animation: rotate 4s linear infinite;
         opacity: 0;
         transition: opacity 0.5s ease;
       }
-      
+
       .category-card:hover::before {
         opacity: 1;
       }
-      
+
       @keyframes rotate {
         100% { transform: rotate(360deg); }
       }
-      
+
       .category-card::after {
         content: '';
         position: absolute;
@@ -502,18 +786,19 @@
         border-radius: 22px;
         z-index: 1;
       }
-      
+
       .category-card > * {
         position: relative;
         z-index: 2;
       }
-      
+
       .category-card:hover {
-        transform: translateY(-15px) rotateX(5deg);
-        border-color: rgba(167, 139, 250, 0.3);
-        box-shadow: 
-          0 25px 50px rgba(139, 92, 246, 0.3),
-          0 0 100px rgba(139, 92, 246, 0.1);
+        transform: translateY(-20px) rotateX(10deg) rotateY(-5deg);
+        border-color: rgba(167, 139, 250, 0.5);
+        box-shadow:
+          0 30px 60px rgba(139, 92, 246, 0.4),
+          0 0 150px rgba(139, 92, 246, 0.2),
+          inset 0 0 30px rgba(139, 92, 246, 0.1);
       }
       
       .category-card .icon-container {
@@ -525,15 +810,41 @@
         align-items: center;
         justify-content: center;
         font-size: 3rem;
-        background: linear-gradient(135deg, rgba(167, 139, 250, 0.2) 0%, rgba(96, 165, 250, 0.2) 100%);
-        border: 2px solid rgba(167, 139, 250, 0.3);
+        background: linear-gradient(135deg, rgba(167, 139, 250, 0.3) 0%, rgba(96, 165, 250, 0.3) 100%);
+        border: 2px solid rgba(167, 139, 250, 0.4);
         transition: all 0.5s ease;
+        position: relative;
       }
-      
+
+      .category-card .icon-container::before {
+        content: '';
+        position: absolute;
+        inset: -3px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #a78bfa, #60a5fa);
+        opacity: 0;
+        transition: opacity 0.5s ease;
+        filter: blur(8px);
+        z-index: -1;
+      }
+
       .category-card:hover .icon-container {
-        transform: scale(1.1) rotateY(360deg);
-        border-color: rgba(167, 139, 250, 0.6);
-        box-shadow: 0 0 30px rgba(139, 92, 246, 0.4);
+        transform: scale(1.2) rotateY(360deg);
+        border-color: rgba(167, 139, 250, 0.8);
+        box-shadow:
+          0 0 40px rgba(139, 92, 246, 0.6),
+          0 0 80px rgba(96, 165, 250, 0.4),
+          inset 0 0 20px rgba(139, 92, 246, 0.3);
+      }
+
+      .category-card:hover .icon-container::before {
+        opacity: 0.8;
+        animation: iconPulse 2s ease-in-out infinite;
+      }
+
+      @keyframes iconPulse {
+        0%, 100% { transform: scale(1); opacity: 0.8; }
+        50% { transform: scale(1.1); opacity: 1; }
       }
       
       .category-card h3 {
@@ -724,6 +1035,59 @@
         font-size: 1.5rem;
       }
       
+      /* 漂浮几何图形 */
+      .floating-shapes {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        overflow: hidden;
+        z-index: 0;
+      }
+
+      .floating-shape {
+        position: absolute;
+        opacity: 0.1;
+        animation: float 20s ease-in-out infinite;
+      }
+
+      .floating-shape.circle {
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        border: 2px solid #a78bfa;
+      }
+
+      .floating-shape.square {
+        width: 150px;
+        height: 150px;
+        border: 2px solid #60a5fa;
+        animation-delay: -5s;
+      }
+
+      .floating-shape.triangle {
+        width: 0;
+        height: 0;
+        border-left: 80px solid transparent;
+        border-right: 80px solid transparent;
+        border-bottom: 140px solid rgba(139, 92, 246, 0.3);
+        animation-delay: -10s;
+      }
+
+      @keyframes float {
+        0%, 100% {
+          transform: translateY(0) rotate(0deg);
+        }
+        25% {
+          transform: translateY(-20px) rotate(90deg);
+        }
+        50% {
+          transform: translateY(0) rotate(180deg);
+        }
+        75% {
+          transform: translateY(20px) rotate(270deg);
+        }
+      }
+
       /* 响应式设计 */
       @media (max-width: 1024px) {
         .stats {
@@ -811,11 +1175,23 @@
     </style>
   </head>
   <body>
+    <!-- 鼠标跟随光效 -->
+    <div class="cursor-glow" id="cursor-glow"></div>
+
     <!-- 动态背景 -->
     <div class="background"></div>
-    
+
+    <!-- 科技网格背景 -->
+    <div class="grid-background"></div>
+
+    <!-- 动态光带 -->
+    <div class="light-beams" id="light-beams"></div>
+
     <!-- 粒子效果 -->
     <div class="particles" id="particles"></div>
+
+    <!-- 流星效果 -->
+    <div class="meteors" id="meteors"></div>
     
     <!-- 右上角科技感个人信息 -->
     <div class="tech-profile" id="profile-hud">
@@ -837,10 +1213,22 @@
     <!-- 首页 -->
     <div id="hero" class="hero">
       <div class="top-line"></div>
-      
+
+      <!-- 动态角落装饰 -->
+      <div class="corner-decoration top-left"></div>
+      <div class="corner-decoration bottom-right"></div>
+
+      <!-- 漂浮几何图形 -->
+      <div class="floating-shapes">
+        <div class="floating-shape circle" style="top: 10%; left: 10%;"></div>
+        <div class="floating-shape square" style="top: 60%; left: 5%;"></div>
+        <div class="floating-shape triangle" style="top: 20%; right: 10%;"></div>
+        <div class="floating-shape circle" style="bottom: 15%; right: 15%;"></div>
+      </div>
+
       <p class="greeting">👋 欢迎来到</p>
-      
-      <h1 class="main-title">我的博客</h1>
+
+      <h1 class="main-title" data-text="我的博客">我的博客</h1>
       
       <p class="subtitle">
         <span id="typing-text"></span>
@@ -938,6 +1326,58 @@
           particle.style.animationDuration = (10 + Math.random() * 10) + 's';
           particlesContainer.appendChild(particle);
         }
+      }
+
+      // 生成流星效果
+      function createMeteors() {
+        const meteorsContainer = document.getElementById('meteors');
+        for (let i = 0; i < 8; i++) {
+          const meteor = document.createElement('div');
+          meteor.className = 'meteor';
+          meteor.style.left = Math.random() * 100 + '%';
+          meteor.style.top = Math.random() * 50 + '%';
+          meteor.style.animationDelay = Math.random() * 5 + 's';
+          meteor.style.animationDuration = (4 + Math.random() * 3) + 's';
+          meteorsContainer.appendChild(meteor);
+        }
+      }
+
+      // 生成动态光带
+      function createLightBeams() {
+        const beamsContainer = document.getElementById('light-beams');
+        for (let i = 0; i < 5; i++) {
+          const beam = document.createElement('div');
+          beam.className = 'light-beam';
+          beam.style.left = (10 + Math.random() * 80) + '%';
+          beam.style.animationDelay = Math.random() * 4 + 's';
+          beam.style.animationDuration = (3 + Math.random() * 2) + 's';
+          beamsContainer.appendChild(beam);
+        }
+      }
+
+      // 鼠标跟随光效
+      function initCursorGlow() {
+        const cursorGlow = document.getElementById('cursor-glow');
+
+        document.addEventListener('mousemove', (e) => {
+          cursorGlow.style.left = e.clientX + 'px';
+          cursorGlow.style.top = e.clientY + 'px';
+        });
+
+        // 鼠标悬停在卡片上时增强光效
+        const cards = document.querySelectorAll('.category-card, .stat-item');
+        cards.forEach(card => {
+          card.addEventListener('mouseenter', () => {
+            cursorGlow.style.opacity = '1';
+            cursorGlow.style.width = '500px';
+            cursorGlow.style.height = '500px';
+          });
+          card.addEventListener('mouseleave', () => {
+            cursorGlow.style.opacity = '0.8';
+            cursorGlow.style.width = '400px';
+            cursorGlow.style.height = '400px';
+          });
+        });
       }
       
       // 打字机效果
@@ -1117,13 +1557,17 @@
       // 初始化
       document.addEventListener('DOMContentLoaded', async () => {
         createParticles();
+        createMeteors();
+        createLightBeams();
+        initCursorGlow();
+
         setTimeout(() => {
           typeWriter('探索技术 · 分享生活 · 记录感悟', 'typing-text', 80);
         }, 1500);
-        
+
         // 加载分类统计
         await loadCategoryStats();
-        
+
         // 加载个人信息
         await loadProfile();
       });
