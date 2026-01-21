@@ -291,9 +291,9 @@
       /* 社交链接容器 */
       .profile-social-hud {
         position: absolute;
-        right: 100%;
-        top: 50%;
-        transform: translateY(-50%) translateX(-10px);
+        left: 50%;
+        top: 100%;
+        transform: translateX(-50%) translateY(-10px);
         display: flex;
         flex-direction: column;
         gap: 8px;
@@ -305,7 +305,7 @@
       }
       
       .profile-hud:hover .profile-social-hud {
-        transform: translateY(-50%) translateX(-15px);
+        transform: translateX(-50%) translateY(10px);
         opacity: 1;
         pointer-events: auto;
       }
