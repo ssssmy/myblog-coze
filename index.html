@@ -1393,11 +1393,13 @@
       // 显示文章列表
       async function showPosts(category) {
         const hero = document.getElementById('hero');
+        const categoriesSection = document.getElementById('categories-section');
         const postsPage = document.getElementById('posts-page');
         const pageTitle = document.getElementById('page-title');
         const postsContainer = document.getElementById('posts-container');
         
         hero.style.display = 'none';
+        categoriesSection.style.display = 'none';
         postsPage.style.display = 'block';
         
         pageTitle.textContent = category === '全部' ? '全部文章' : category + '文章';
