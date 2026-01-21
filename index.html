@@ -597,6 +597,8 @@
       /* 左侧分类导航 */
       .category-sidebar {
         width: 350px;
+        min-width: 250px;
+        max-width: 500px;
         background: rgba(0, 0, 0, 0.3);
         backdrop-filter: blur(10px);
         border-right: 1px solid rgba(255, 255, 255, 0.1);
@@ -605,6 +607,7 @@
         height: 100%;
         overflow: hidden;
         flex-shrink: 0;
+        position: relative;
       }
       
       .sidebar-header {
@@ -699,6 +702,44 @@
         border-radius: 12px;
         font-size: 0.75rem;
         font-weight: 600;
+      }
+      
+      /* 拖动手柄 - 分类侧边栏 */
+      .category-resize-handle {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 6px;
+        height: 100%;
+        background: transparent;
+        cursor: col-resize;
+        transition: background 0.2s ease;
+        z-index: 100;
+        user-select: none;
+      }
+      
+      .category-resize-handle:hover,
+      .category-resize-handle.resizing {
+        background: rgba(167, 139, 250, 0.5);
+      }
+      
+      .category-resize-handle::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 3px;
+        height: 30px;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 2px;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
+      
+      .category-resize-handle:hover::after,
+      .category-resize-handle.resizing::after {
+        opacity: 1;
       }
       
       /* 右侧文章内容 */
@@ -866,6 +907,8 @@
       /* 左侧文章列表导航 */
       .article-sidebar {
         width: 350px;
+        min-width: 250px;
+        max-width: 500px;
         background: rgba(0, 0, 0, 0.3);
         backdrop-filter: blur(10px);
         border-right: 1px solid rgba(255, 255, 255, 0.1);
@@ -874,6 +917,45 @@
         height: 100%;
         overflow: hidden;
         flex-shrink: 0;
+        position: relative;
+      }
+      
+      /* 拖动手柄 - 文章侧边栏 */
+      .article-resize-handle {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 6px;
+        height: 100%;
+        background: transparent;
+        cursor: col-resize;
+        transition: background 0.2s ease;
+        z-index: 100;
+        user-select: none;
+      }
+      
+      .article-resize-handle:hover,
+      .article-resize-handle.resizing {
+        background: rgba(167, 139, 250, 0.5);
+      }
+      
+      .article-resize-handle::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 3px;
+        height: 30px;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 2px;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
+      
+      .article-resize-handle:hover::after,
+      .article-resize-handle.resizing::after {
+        opacity: 1;
       }
       
       .sidebar-header {
@@ -1395,6 +1477,7 @@
       <div class="posts-layout">
         <!-- 左侧分类导航 -->
         <div class="category-sidebar">
+          <div class="category-resize-handle" id="category-resize-handle"></div>
           <div class="sidebar-header">
             <h2>分类导航</h2>
             <button class="sidebar-back-btn" onclick="goHome()">← 返回首页</button>
@@ -1419,6 +1502,7 @@
       <div class="article-view-layout">
         <!-- 左侧文章列表导航 -->
         <div class="article-sidebar">
+          <div class="article-resize-handle" id="article-resize-handle"></div>
           <div class="sidebar-header">
             <h2>文章目录</h2>
             <p id="sidebar-subtitle">共 6 篇文章</p>
@@ -1817,6 +1901,9 @@
         
         // 添加滚动淡化效果
         window.addEventListener('scroll', handleScrollFade);
+        
+        // 初始化侧边栏拖动功能
+        initializeResizeHandler();
       });
       
       // 处理滚动淡化效果
@@ -1838,6 +1925,99 @@
         } else {
           profileHud.style.pointerEvents = 'auto';
         }
+      }
+      
+      // 拖动调整宽度功能
+      function initializeResizeHandler() {
+        // 分类侧边栏拖动
+        initSidebarResize(
+          'category-resize-handle',
+          'category-sidebar',
+          250,
+          500
+        );
+        
+        // 文章侧边栏拖动
+        initSidebarResize(
+          'article-resize-handle',
+          'article-sidebar',
+          250,
+          500
+        );
+      }
+      
+      function initSidebarResize(handleId, sidebarId, minWidth, maxWidth) {
+        const handle = document.getElementById(handleId);
+        const sidebar = document.getElementById(sidebarId);
+        
+        if (!handle || !sidebar) return;
+        
+        let isResizing = false;
+        let startX = 0;
+        let startWidth = 0;
+        
+        // 鼠标事件处理
+        handle.addEventListener('mousedown', (e) => {
+          isResizing = true;
+          startX = e.clientX;
+          startWidth = sidebar.offsetWidth;
+          handle.classList.add('resizing');
+          
+          // 防止选中文本
+          e.preventDefault();
+        });
+        
+        document.addEventListener('mousemove', (e) => {
+          if (!isResizing) return;
+          
+          const dx = e.clientX - startX;
+          let newWidth = startWidth + dx;
+          
+          // 限制宽度范围
+          newWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
+          
+          sidebar.style.width = `${newWidth}px`;
+        });
+        
+        document.addEventListener('mouseup', () => {
+          if (isResizing) {
+            isResizing = false;
+            handle.classList.remove('resizing');
+          }
+        });
+        
+        // 触摸事件处理（支持移动端）
+        handle.addEventListener('touchstart', (e) => {
+          isResizing = true;
+          startX = e.touches[0].clientX;
+          startWidth = sidebar.offsetWidth;
+          handle.classList.add('resizing');
+          
+          // 防止滚动
+          e.preventDefault();
+        }, { passive: false });
+        
+        document.addEventListener('touchmove', (e) => {
+          if (!isResizing) return;
+          
+          const dx = e.touches[0].clientX - startX;
+          let newWidth = startWidth + dx;
+          
+          // 限制宽度范围
+          newWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
+          
+          sidebar.style.width = `${newWidth}px`;
+          
+          // 防止滚动
+          e.preventDefault();
+        }, { passive: false });
+        
+        document.addEventListener('touchend', () => {
+          if (isResizing) {
+            isResizing = false;
+            handle.classList.remove('resizing');
+          }
+        });
       }
       
       // 将函数暴露到全局作用域，以便 HTML onclick 可以访问
