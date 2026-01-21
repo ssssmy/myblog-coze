@@ -77,13 +77,15 @@
       
       /* 主页容器 */
       .hero {
-        min-height: 100vh;
+        height: 100vh;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         padding: 3rem 2rem;
         position: relative;
+        max-width: 1400px;
+        margin: 0 auto;
       }
       
       /* 顶部装饰线条 */
@@ -431,13 +433,15 @@
       .categories-section {
         width: 100%;
         max-width: 1400px;
+        padding: 4rem 2rem;
+        margin: 0 auto;
         animation: fadeInUp 1s ease-out 1.2s backwards;
       }
       
       .section-title {
         font-size: 1.5rem;
         font-weight: 700;
-        margin-bottom: 2rem;
+        margin-bottom: 3rem;
         text-align: center;
         color: rgba(255,255,255,0.9);
         text-transform: uppercase;
@@ -857,38 +861,39 @@
           <div class="label">成长</div>
         </div>
       </div>
+    </div>
+    
+    <!-- 分类区域 -->
+    <div id="categories-section" class="categories-section">
+      <h2 class="section-title">选择一个分类开始探索</h2>
       
-      <div class="categories-section">
-        <h2 class="section-title">选择一个分类开始探索</h2>
+      <div class="category-cards">
+        <div class="category-card" onclick="showPosts('全部')">
+          <div class="icon-container">📚</div>
+          <h3>全部文章</h3>
+          <p class="description">浏览所有精彩内容</p>
+          <span class="count">6 篇文章</span>
+        </div>
         
-        <div class="category-cards">
-          <div class="category-card" onclick="showPosts('全部')">
-            <div class="icon-container">📚</div>
-            <h3>全部文章</h3>
-            <p class="description">浏览所有精彩内容</p>
-            <span class="count">6 篇文章</span>
-          </div>
-          
-          <div class="category-card" onclick="showPosts('技术')">
-            <div class="icon-container">💻</div>
-            <h3>技术</h3>
-            <p class="description">编程、开发、技术分享</p>
-            <span class="count">3 篇文章</span>
-          </div>
-          
-          <div class="category-card" onclick="showPosts('生活')">
-            <div class="icon-container">🌱</div>
-            <h3>生活</h3>
-            <p class="description">日常、感悟、生活记录</p>
-            <span class="count">2 篇文章</span>
-          </div>
-          
-          <div class="category-card" onclick="showPosts('随笔')">
-            <div class="icon-container">✍️</div>
-            <h3>随笔</h3>
-            <p class="description">思考、随笔、心情日记</p>
-            <span class="count">1 篇文章</span>
-          </div>
+        <div class="category-card" onclick="showPosts('技术')">
+          <div class="icon-container">💻</div>
+          <h3>技术</h3>
+          <p class="description">编程、开发、技术分享</p>
+          <span class="count">3 篇文章</span>
+        </div>
+        
+        <div class="category-card" onclick="showPosts('生活')">
+          <div class="icon-container">🌱</div>
+          <h3>生活</h3>
+          <p class="description">日常、感悟、生活记录</p>
+          <span class="count">2 篇文章</span>
+        </div>
+        
+        <div class="category-card" onclick="showPosts('随笔')">
+          <div class="icon-container">✍️</div>
+          <h3>随笔</h3>
+          <p class="description">思考、随笔、心情日记</p>
+          <span class="count">1 篇文章</span>
         </div>
       </div>
     </div>
