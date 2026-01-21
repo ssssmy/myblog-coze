@@ -632,7 +632,23 @@
       </div>
     </div>
 
-    <script>
+    <script type="module" src="/src/api.js"></script>
+    <script type="module">
+      // API 请求函数
+      async function apiRequest(endpoint) {
+        try {
+          const response = await fetch(`/api${endpoint}`);
+          const data = await response.json();
+          if (!response.ok) {
+            throw new Error(data.message || '请求失败');
+          }
+          return data;
+        } catch (error) {
+          console.error('API 请求错误:', error);
+          throw error;
+        }
+      }
+      
       // 生成粒子
       function createParticles() {
         const particlesContainer = document.getElementById('particles');
@@ -663,54 +679,8 @@
         type();
       }
       
-      // 文章数据
-      const posts = [
-        {
-          id: 1,
-          title: 'Vue 3 Composition API 深入理解',
-          excerpt: 'Vue 3 的 Composition API 为我们提供了更灵活的代码组织方式。本文将深入探讨其核心概念、使用场景以及最佳实践。',
-          category: '技术',
-          date: '2024-01-15'
-        },
-        {
-          id: 2,
-          title: 'TypeScript 高级类型技巧',
-          excerpt: '掌握 TypeScript 的高级类型特性，可以让你的代码更加健壮和类型安全。本文介绍泛型、条件类型、映射类型等高级技巧。',
-          category: '技术',
-          date: '2024-01-10'
-        },
-        {
-          id: 3,
-          title: '我的程序员工涯感悟',
-          excerpt: '作为一个程序员，我经历了从学生到职场人的转变。在这篇文章中，我分享一些关于职业发展的思考和感悟。',
-          category: '随笔',
-          date: '2024-01-05'
-        },
-        {
-          id: 4,
-          title: '如何保持高效的学习状态',
-          excerpt: '在快速变化的技术领域，持续学习是必不可少的。本文分享一些我在学习过程中总结的方法和技巧。',
-          category: '生活',
-          date: '2024-01-01'
-        },
-        {
-          id: 5,
-          title: '前端性能优化实战指南',
-          excerpt: '从代码层面到架构层面，全方位介绍前端性能优化的策略和最佳实践，帮助你构建更快的 Web 应用。',
-          category: '技术',
-          date: '2023-12-28'
-        },
-        {
-          id: 6,
-          title: '周末的咖啡时光',
-          excerpt: '在一个阳光明媚的周末，我来到了一家安静的咖啡馆，享受难得的闲暇时光。',
-          category: '生活',
-          date: '2023-12-25'
-        }
-      ];
-      
       // 显示文章列表
-      function showPosts(category) {
+      async function showPosts(category) {
         const hero = document.getElementById('hero');
         const postsPage = document.getElementById('posts-page');
         const pageTitle = document.getElementById('page-title');
@@ -720,22 +690,27 @@
         postsPage.style.display = 'block';
         
         pageTitle.textContent = category === '全部' ? '全部文章' : category + '文章';
+        postsContainer.innerHTML = '<div class="no-posts">加载中... 🔄</div>';
         
-        const filteredPosts = category === '全部' 
-          ? posts 
-          : posts.filter(post => post.category === category);
-        
-        if (filteredPosts.length === 0) {
-          postsContainer.innerHTML = '<div class="no-posts">该分类下暂无文章 📭</div>';
-        } else {
-          postsContainer.innerHTML = filteredPosts.map(post => `
-            <div class="post-card" onclick="showPostDetail('${post.title}')">
-              <span class="post-category">${post.category}</span>
-              <h3>${post.title}</h3>
-              <p class="post-date">${post.date}</p>
-              <p>${post.excerpt}</p>
-            </div>
-          `).join('');
+        try {
+          const data = await apiRequest(`/posts/category/${encodeURIComponent(category)}`);
+          const posts = data.data;
+          
+          if (posts.length === 0) {
+            postsContainer.innerHTML = '<div class="no-posts">该分类下暂无文章 📭</div>';
+          } else {
+            postsContainer.innerHTML = posts.map(post => `
+              <div class="post-card" onclick="showPostDetail(${post.id})">
+                <span class="post-category">${post.category}</span>
+                <h3>${post.title}</h3>
+                <p class="post-date">${post.date}</p>
+                <p>${post.excerpt}</p>
+              </div>
+            `).join('');
+          }
+        } catch (error) {
+          postsContainer.innerHTML = '<div class="no-posts">加载失败，请稍后重试 ❌</div>';
+          console.error('加载文章失败:', error);
         }
       }
       
@@ -754,17 +729,55 @@
       }
       
       // 显示文章详情
-      function showPostDetail(title) {
-        alert('文章详情页面功能开发中...\n\n您点击了：' + title);
+      async function showPostDetail(id) {
+        try {
+          const data = await apiRequest(`/posts/${id}`);
+          const post = data.data;
+          alert(`文章详情：\n\n标题：${post.title}\n分类：${post.category}\n日期：${post.date}\n\n内容预览：\n${post.content.substring(0, 100)}...`);
+        } catch (error) {
+          alert('加载文章详情失败');
+          console.error('加载文章详情失败:', error);
+        }
+      }
+      
+      // 加载分类统计数据
+      async function loadCategoryStats() {
+        try {
+          const data = await apiRequest('/categories');
+          const categories = data.data;
+          
+          // 更新分类卡片上的文章数量
+          categories.forEach(cat => {
+            const countElements = document.querySelectorAll(`.category-card h3`);
+            countElements.forEach(el => {
+              if (el.textContent === cat.name) {
+                const countEl = el.parentElement.querySelector('.count');
+                if (countEl) {
+                  countEl.textContent = `${cat.count} 篇文章`;
+                }
+              }
+            });
+          });
+        } catch (error) {
+          console.error('加载分类统计失败:', error);
+        }
       }
       
       // 初始化
-      document.addEventListener('DOMContentLoaded', () => {
+      document.addEventListener('DOMContentLoaded', async () => {
         createParticles();
         setTimeout(() => {
           typeWriter('探索技术 · 分享生活 · 记录感悟', 'typing-text', 80);
         }, 1500);
+        
+        // 加载分类统计
+        await loadCategoryStats();
       });
+      
+      // 将函数暴露到全局作用域，以便 HTML onclick 可以访问
+      window.showPosts = showPosts;
+      window.goHome = goHome;
+      window.showPostDetail = showPostDetail;
     </script>
   </body>
 </html>
