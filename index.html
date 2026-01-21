@@ -985,7 +985,102 @@
         border-radius: 12px;
         font-weight: 600;
       }
-      
+
+      /* 树形目录样式 */
+      .toc-container {
+        padding: 1rem;
+        flex: 1;
+        overflow-y: auto;
+      }
+
+      .toc-container::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      .toc-container::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .toc-container::-webkit-scrollbar-thumb {
+        background: rgba(167, 139, 250, 0.3);
+        border-radius: 3px;
+      }
+
+      .toc-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .toc-item {
+        position: relative;
+      }
+
+      .toc-link {
+        display: block;
+        padding: 0.6rem 0.8rem;
+        margin-bottom: 0.25rem;
+        color: rgba(255, 255, 255, 0.7);
+        text-decoration: none;
+        font-size: 0.9rem;
+        line-height: 1.4;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        border-left: 2px solid transparent;
+      }
+
+      .toc-link:hover {
+        background: rgba(167, 139, 250, 0.1);
+        color: white;
+        border-left-color: rgba(167, 139, 250, 0.4);
+      }
+
+      .toc-link.active {
+        background: rgba(167, 139, 250, 0.2);
+        color: #a78bfa;
+        border-left-color: #a78bfa;
+        font-weight: 600;
+      }
+
+      /* 不同层级的缩进 */
+      .toc-level-1 .toc-link {
+        font-size: 0.95rem;
+        font-weight: 600;
+        padding-left: 0.8rem;
+      }
+
+      .toc-level-2 .toc-link {
+        padding-left: 1.8rem;
+        font-size: 0.875rem;
+      }
+
+      .toc-level-3 .toc-link {
+        padding-left: 2.8rem;
+        font-size: 0.825rem;
+      }
+
+      .toc-level-4 .toc-link {
+        padding-left: 3.8rem;
+        font-size: 0.775rem;
+      }
+
+      /* 空状态提示 */
+      .toc-empty {
+        text-align: center;
+        padding: 2rem 1rem;
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 0.875rem;
+      }
+
+      /* 标题锚点样式 */
+      .heading-anchor {
+        position: relative;
+        display: block;
+        top: -3rem; /* 偏移量，让滚动定位更准确 */
+        visibility: hidden;
+      }
+
       /* 右侧文章内容 */
       .article-content-area {
         flex: 1;
@@ -1417,15 +1512,15 @@
     <!-- 文章浏览页面 -->
     <div id="article-view-page" class="article-view-page">
       <div class="article-view-layout">
-        <!-- 左侧文章列表导航 -->
+        <!-- 左侧文章目录导航 -->
         <div class="article-sidebar">
           <div class="sidebar-header">
-            <h2>文章目录</h2>
-            <p id="sidebar-subtitle">共 6 篇文章</p>
+            <h2>目录导航</h2>
+            <p id="sidebar-subtitle">目录索引</p>
             <button class="sidebar-back-btn" onclick="goHome()">← 返回首页</button>
           </div>
-          <div class="article-list" id="article-list">
-            <!-- 文章列表项会动态生成 -->
+          <div class="toc-container" id="toc-container">
+            <div class="toc-empty">加载目录中...</div>
           </div>
         </div>
         
@@ -1625,67 +1720,166 @@
           const categoriesSection = document.getElementById('categories-section');
           const postsPage = document.getElementById('posts-page');
           const articleViewPage = document.getElementById('article-view-page');
-          
+
           hero.style.display = 'none';
           categoriesSection.style.display = 'none';
           postsPage.style.display = 'none';
           articleViewPage.style.display = 'block';
-          
-          // 加载所有文章到左侧列表
-          await loadArticleList();
-          
-          // 加载并显示当前文章
+
+          // 加载并显示当前文章（会自动生成目录）
           await loadArticleContent(id);
         } catch (error) {
           console.error('打开文章详情失败:', error);
         }
       }
-      
-      // 加载文章列表到左侧导航
-      async function loadArticleList() {
-        try {
-          const data = await apiRequest('/posts');
-          const posts = data.data;
-          const articleList = document.getElementById('article-list');
-          const sidebarSubtitle = document.getElementById('sidebar-subtitle');
-          
-          // 更新标题
-          sidebarSubtitle.textContent = `共 ${posts.length} 篇文章`;
-          
-          // 生成文章列表
-          articleList.innerHTML = posts.map(post => `
-            <div class="article-list-item" data-id="${post.id}" onclick="loadArticleContent(${post.id})">
-              <div class="item-title">${post.title}</div>
-              <div class="item-meta">
-                <span class="item-category">${post.category}</span>
-                <span>${post.date}</span>
-              </div>
-            </div>
-          `).join('');
-        } catch (error) {
-          console.error('加载文章列表失败:', error);
+
+      // 从 Markdown 内容中提取标题结构
+      function extractHeadings(markdown) {
+        const headings = [];
+        const lines = markdown.split('\n');
+        let headingCount = 0;
+
+        lines.forEach((line, index) => {
+          const headingMatch = line.match(/^(#{1,4})\s+(.+)$/);
+          if (headingMatch) {
+            headingCount++;
+            const level = headingMatch[1].length;
+            const text = headingMatch[2].trim();
+            const id = `heading-${headingCount}`;
+
+            headings.push({
+              level,
+              text,
+              id,
+              index
+            });
+          }
+        });
+
+        return headings;
+      }
+
+      // 生成树形目录 HTML
+      function generateTOC(headings) {
+        if (headings.length === 0) {
+          return '<div class="toc-empty">本文无目录结构</div>';
+        }
+
+        let html = '<ul class="toc-list">';
+        let currentLevel = 1;
+
+        headings.forEach(heading => {
+          html += `<li class="toc-item toc-level-${heading.level}">`;
+          html += `<a class="toc-link" data-target="${heading.id}" onclick="scrollToHeading('${heading.id}')">${heading.text}</a>`;
+          html += '</li>';
+        });
+
+        html += '</ul>';
+        return html;
+      }
+
+      // 滚动到指定标题
+      function scrollToHeading(headingId) {
+        const targetElement = document.getElementById(headingId);
+        if (targetElement) {
+          const contentArea = document.getElementById('article-content-area');
+          const offset = 20; // 顶部留白
+          const elementPosition = targetElement.offsetTop;
+          const scrollPosition = elementPosition - offset;
+
+          contentArea.scrollTo({
+            top: scrollPosition,
+            behavior: 'smooth'
+          });
+
+          // 更新激活状态
+          updateActiveTOC(headingId);
         }
       }
-      
+
+      // 更新目录激活状态
+      function updateActiveTOC(activeId) {
+        document.querySelectorAll('.toc-link').forEach(link => {
+          link.classList.remove('active');
+          if (link.dataset.target === activeId) {
+            link.classList.add('active');
+          }
+        });
+      }
+
+      // 初始化滚动监听
+      function initScrollListener() {
+        const contentArea = document.getElementById('article-content-area');
+        if (!contentArea) return;
+
+        // 先移除旧的监听器
+        const oldListener = contentArea._scrollListener;
+        if (oldListener) {
+          contentArea.removeEventListener('scroll', oldListener);
+        }
+
+        // 创建新的监听器
+        const scrollListener = () => {
+          const headings = document.querySelectorAll('[id^="heading-"]');
+          let activeId = '';
+
+          if (headings.length === 0) return;
+
+          // 找到当前视口中最近的标题
+          const scrollPosition = contentArea.scrollTop + 100; // 偏移量
+
+          for (let i = headings.length - 1; i >= 0; i--) {
+            const heading = headings[i];
+            if (heading.offsetTop <= scrollPosition) {
+              activeId = heading.id;
+              break;
+            }
+          }
+
+          if (activeId) {
+            updateActiveTOC(activeId);
+          }
+        };
+
+        contentArea._scrollListener = scrollListener;
+        contentArea.addEventListener('scroll', scrollListener);
+      }
+
       // 加载文章内容到右侧
       async function loadArticleContent(id) {
         try {
-          // 高亮当前选中的文章
-          document.querySelectorAll('.article-list-item').forEach(item => {
-            item.classList.remove('active');
-            if (parseInt(item.dataset.id) === id) {
-              item.classList.add('active');
-            }
-          });
-          
           // 加载文章内容
           const data = await apiRequest(`/posts/${id}`);
           const post = data.data;
           const articleContentArea = document.getElementById('article-content-area');
-          
-          // 渲染文章内容
-          const renderedContent = marked.parse(post.content);
-          
+          const sidebarSubtitle = document.getElementById('sidebar-subtitle');
+          const tocContainer = document.getElementById('toc-container');
+
+          // 更新侧边栏标题
+          sidebarSubtitle.textContent = `当前阅读：${post.title}`;
+
+          // 提取标题并生成目录
+          const headings = extractHeadings(post.content);
+          const tocHTML = generateTOC(headings);
+          tocContainer.innerHTML = tocHTML;
+
+          // 渲染文章内容，为标题添加 HTML 锚点
+          const lines = post.content.split('\n');
+          const processedLines = lines.map(line => {
+            const headingMatch = line.match(/^(#{1,4})\s+(.+)$/);
+            if (headingMatch) {
+              const level = headingMatch[1].length;
+              const text = headingMatch[2].trim();
+              const heading = headings.find(h => h.text === text);
+              if (heading) {
+                return `<a id="${heading.id}" class="heading-anchor"></a>\n${'#'.repeat(level)} ${text}`;
+              }
+            }
+            return line;
+          });
+          const processedMarkdown = processedLines.join('\n');
+          const renderedContent = marked.parse(processedMarkdown);
+
           articleContentArea.innerHTML = `
             <div class="article-header">
               <h1>${post.title}</h1>
@@ -1698,6 +1892,9 @@
               ${renderedContent}
             </div>
           `;
+
+          // 初始化滚动监听
+          initScrollListener();
         } catch (error) {
           console.error('加载文章内容失败:', error);
         }
@@ -1846,6 +2043,7 @@
       window.showPostDetail = showPostDetail;
       window.loadArticleContent = loadArticleContent;
       window.filterByCategory = filterByCategory;
+      window.scrollToHeading = scrollToHeading;
     </script>
   </body>
 </html>
