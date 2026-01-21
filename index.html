@@ -1039,11 +1039,17 @@
             }
             
             socialContainer.innerHTML = socialLinks.map(link => `
-              <a href="${link.url}" class="social-link-hud" target="_blank">
+              <a href="${link.url}" class="social-link-hud" data-url="${link.url}" data-name="${link.name}">
                 <span class="social-icon">${link.icon}</span>
                 ${link.name}
               </a>
             `).join('');
+            
+            // 为每个社交链接添加点击事件
+            const linkElements = socialContainer.querySelectorAll('.social-link-hud');
+            linkElements.forEach(el => {
+              el.addEventListener('click', handleSocialLinkClick);
+            });
           }
         } catch (error) {
           console.error('加载个人信息失败:', error);
@@ -1051,6 +1057,33 @@
           document.getElementById('profile-name').textContent = 'UNKNOWN';
           document.getElementById('profile-role').textContent = 'SYSTEM ERROR';
         }
+      }
+      
+      // 处理社交链接点击
+      function handleSocialLinkClick(e) {
+        e.preventDefault();
+        const link = e.currentTarget;
+        const url = link.dataset.url;
+        const name = link.dataset.name;
+        
+        // 添加点击动画效果
+        link.style.transform = 'translateX(-10px) scale(0.95)';
+        link.style.background = 'rgba(0, 255, 255, 0.4)';
+        link.style.boxShadow = '0 0 30px rgba(0, 255, 255, 0.8)';
+        
+        // 延迟后恢复并跳转
+        setTimeout(() => {
+          link.style.transform = 'translateX(-5px)';
+          link.style.background = '';
+          link.style.boxShadow = '';
+          
+          // 跳转到链接
+          if (url.startsWith('mailto:')) {
+            window.location.href = url;
+          } else {
+            window.open(url, '_blank');
+          }
+        }, 300);
       }
       
       // 初始化
