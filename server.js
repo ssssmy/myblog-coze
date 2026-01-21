@@ -147,6 +147,24 @@ app.get('/api/stats', (req, res) => {
   });
 });
 
+// 获取个人信息
+app.get('/api/profile', (req, res) => {
+  res.json({
+    success: true,
+    data: {
+      name: 'Alex Chen',
+      role: '全栈开发工程师',
+      bio: '热爱技术与生活',
+      avatar: '👨‍💻',
+      social: {
+        github: 'https://github.com',
+        twitter: 'https://twitter.com',
+        email: 'hello@example.com'
+      }
+    }
+  });
+});
+
 // 健康检查
 app.get('/api/health', (req, res) => {
   res.json({

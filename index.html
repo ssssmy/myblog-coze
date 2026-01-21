@@ -177,134 +177,115 @@
         51%, 100% { opacity: 0; }
       }
       
-      /* 个人信息区域 */
-      .profile-section {
-        text-align: center;
-        margin-bottom: 3rem;
-        animation: fadeInUp 1s ease-out 0.8s backwards;
+      /* 右上角科技感个人信息 */
+      .tech-profile {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        font-family: 'Courier New', monospace;
       }
       
-      .profile-card {
-        display: inline-flex;
-        flex-direction: column;
+      .profile-hud {
+        display: flex;
         align-items: center;
-        padding: 2.5rem 3.5rem;
-        background: rgba(255,255,255,0.05);
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 30px;
-        transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+        gap: 12px;
+        background: rgba(0, 0, 0, 0.6);
+        border: 1px solid rgba(0, 255, 255, 0.3);
+        padding: 10px 15px;
         position: relative;
-        overflow: hidden;
+        backdrop-filter: blur(5px);
       }
       
-      .profile-card::before {
+      .profile-hud::before,
+      .profile-hud::after {
         content: '';
         position: absolute;
-        top: -2px;
-        left: -2px;
-        right: -2px;
+        width: 8px;
+        height: 8px;
+        background: #00ffff;
+      }
+      
+      .profile-hud::before {
+        top: -4px;
+        left: -4px;
+        box-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff;
+        animation: pulseCyan 2s infinite;
+      }
+      
+      .profile-hud::after {
+        bottom: -4px;
+        right: -4px;
+        box-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff;
+        animation: pulseCyan 2s infinite 0.5s;
+      }
+      
+      @keyframes pulseCyan {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.5; transform: scale(1.2); }
+      }
+      
+      .profile-avatar-hud {
+        width: 45px;
+        height: 45px;
+        background: linear-gradient(135deg, #00ffff, #ff00ff);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        position: relative;
+        clip-path: polygon(0 0, 100% 0, 100% 85%, 85% 100%, 0 100%);
+      }
+      
+      .profile-avatar-hud::after {
+        content: '';
+        position: absolute;
+        inset: 2px;
+        background: #000;
+        clip-path: polygon(0 0, 100% 0, 100% 85%, 85% 100%, 0 100%);
+      }
+      
+      .profile-avatar-hud > span {
+        position: relative;
+        z-index: 1;
+      }
+      
+      .profile-info-hud {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      
+      .profile-name-hud {
+        font-size: 0.9rem;
+        font-weight: bold;
+        color: #00ffff;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+      }
+      
+      .profile-role-hud {
+        font-size: 0.7rem;
+        color: #ff00ff;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        opacity: 0.8;
+      }
+      
+      .profile-status-line {
+        position: absolute;
         bottom: -2px;
-        background: linear-gradient(45deg, #7c3aed, #3b82f6, #7c3aed, #3b82f6);
-        background-size: 400% 400%;
-        border-radius: 32px;
-        z-index: -1;
-        animation: gradientBorder 6s ease infinite;
-        opacity: 0;
-        transition: opacity 0.4s ease;
+        left: 0;
+        height: 2px;
+        background: linear-gradient(90deg, #00ffff, #ff00ff, #00ffff);
+        background-size: 200% 100%;
+        animation: scanline 2s linear infinite;
       }
       
-      .profile-card:hover::before {
-        opacity: 0.6;
-      }
-      
-      @keyframes gradientBorder {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
-      }
-      
-      .profile-card:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 30px 60px rgba(139, 92, 246, 0.3);
-      }
-      
-      .profile-avatar {
-        width: 120px;
-        height: 120px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 4rem;
-        margin-bottom: 1.5rem;
-        border: 4px solid rgba(167, 139, 250, 0.3);
-        box-shadow: 0 10px 30px rgba(139, 92, 246, 0.3);
-        transition: all 0.4s ease;
-      }
-      
-      .profile-card:hover .profile-avatar {
-        transform: scale(1.1) rotate(5deg);
-        box-shadow: 0 15px 40px rgba(139, 92, 246, 0.5);
-      }
-      
-      .profile-name {
-        font-size: 2rem;
-        font-weight: 700;
-        margin-bottom: 0.5rem;
-        background: linear-gradient(135deg, #fff 0%, #a78bfa 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-      }
-      
-      .profile-role {
-        font-size: 1.1rem;
-        color: rgba(255,255,255,0.7);
-        margin-bottom: 1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-      }
-      
-      .profile-role::before {
-        content: '💼';
-      }
-      
-      .profile-bio {
-        color: rgba(255,255,255,0.6);
-        font-size: 1rem;
-        line-height: 1.6;
-        max-width: 400px;
-        margin-bottom: 1.5rem;
-      }
-      
-      .profile-social {
-        display: flex;
-        gap: 1rem;
-      }
-      
-      .social-link {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: rgba(255,255,255,0.08);
-        border: 1px solid rgba(255,255,255,0.15);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.2rem;
-        transition: all 0.3s ease;
-        text-decoration: none;
-        color: white;
-      }
-      
-      .social-link:hover {
-        background: rgba(167, 139, 250, 0.3);
-        border-color: rgba(167, 139, 250, 0.5);
-        transform: translateY(-3px);
-        box-shadow: 0 10px 20px rgba(139, 92, 246, 0.2);
+      @keyframes scanline {
+        0% { background-position: 0% 0%; }
+        100% { background-position: 200% 0%; }
       }
       
       /* 统计数据 */
@@ -643,21 +624,6 @@
       
       /* 响应式设计 */
       @media (max-width: 1024px) {
-        .profile-card {
-          padding: 2rem 2.5rem;
-        }
-        .profile-avatar {
-          width: 100px;
-          height: 100px;
-          font-size: 3.5rem;
-        }
-        .profile-name {
-          font-size: 1.75rem;
-        }
-        .profile-bio {
-          font-size: 0.95rem;
-          max-width: 350px;
-        }
         .stats {
           gap: 1.5rem;
         }
@@ -670,35 +636,32 @@
       }
       
       @media (max-width: 768px) {
+        .tech-profile {
+          top: 10px;
+          right: 10px;
+        }
+        
+        .profile-hud {
+          padding: 8px 12px;
+          gap: 8px;
+        }
+        
+        .profile-avatar-hud {
+          width: 35px;
+          height: 35px;
+          font-size: 1.2rem;
+        }
+        
+        .profile-name-hud {
+          font-size: 0.8rem;
+        }
+        
+        .profile-role-hud {
+          font-size: 0.65rem;
+        }
+        
         .hero {
           padding: 2rem 1.5rem;
-        }
-        .profile-card {
-          padding: 1.5rem 2rem;
-          max-width: 100%;
-        }
-        .profile-avatar {
-          width: 90px;
-          height: 90px;
-          font-size: 3rem;
-        }
-        .profile-name {
-          font-size: 1.5rem;
-        }
-        .profile-role {
-          font-size: 1rem;
-        }
-        .profile-bio {
-          font-size: 0.9rem;
-          max-width: 100%;
-        }
-        .profile-social {
-          gap: 0.75rem;
-        }
-        .social-link {
-          width: 36px;
-          height: 36px;
-          font-size: 1.1rem;
         }
         .stats {
           flex-direction: column;
@@ -729,6 +692,20 @@
     <!-- 粒子效果 -->
     <div class="particles" id="particles"></div>
     
+    <!-- 右上角科技感个人信息 -->
+    <div class="tech-profile" id="profile-hud">
+      <div class="profile-hud">
+        <div class="profile-avatar-hud">
+          <span id="profile-avatar">👨‍💻</span>
+        </div>
+        <div class="profile-info-hud">
+          <span class="profile-name-hud" id="profile-name">LOADING...</span>
+          <span class="profile-role-hud" id="profile-role">LOADING...</span>
+        </div>
+        <div class="profile-status-line"></div>
+      </div>
+    </div>
+    
     <!-- 首页 -->
     <div id="hero" class="hero">
       <div class="top-line"></div>
@@ -741,24 +718,6 @@
         <span id="typing-text"></span>
         <span class="typing-cursor"></span>
       </p>
-      
-      <!-- 个人信息区域 -->
-      <div class="profile-section">
-        <div class="profile-card">
-          <div class="profile-avatar">👨‍💻</div>
-          <h2 class="profile-name">Alex Chen</h2>
-          <p class="profile-role">全栈开发工程师</p>
-          <p class="profile-bio">
-            热爱技术与生活，专注于前端开发与用户体验设计。
-            在这里分享技术见解、生活点滴与成长感悟。
-          </p>
-          <div class="profile-social">
-            <a href="https://github.com" class="social-link" title="GitHub">📱</a>
-            <a href="https://twitter.com" class="social-link" title="Twitter">🐦</a>
-            <a href="mailto:hello@example.com" class="social-link" title="Email">✉️</a>
-          </div>
-        </div>
-      </div>
       
       <div class="stats">
         <div class="stat-item">
@@ -953,6 +912,24 @@
         }
       }
       
+      // 加载个人信息
+      async function loadProfile() {
+        try {
+          const data = await apiRequest('/profile');
+          const profile = data.data;
+          
+          // 更新DOM
+          document.getElementById('profile-avatar').textContent = profile.avatar;
+          document.getElementById('profile-name').textContent = profile.name;
+          document.getElementById('profile-role').textContent = profile.role;
+        } catch (error) {
+          console.error('加载个人信息失败:', error);
+          // 使用默认值
+          document.getElementById('profile-name').textContent = 'UNKNOWN';
+          document.getElementById('profile-role').textContent = 'SYSTEM ERROR';
+        }
+      }
+      
       // 初始化
       document.addEventListener('DOMContentLoaded', async () => {
         createParticles();
@@ -962,6 +939,9 @@
         
         // 加载分类统计
         await loadCategoryStats();
+        
+        // 加载个人信息
+        await loadProfile();
       });
       
       // 将函数暴露到全局作用域，以便 HTML onclick 可以访问
