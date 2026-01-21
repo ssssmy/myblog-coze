@@ -13,46 +13,132 @@
       }
       body {
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-        background-color: #0f172a;
+        background-color: #0a0a0a;
         min-height: 100vh;
         color: white;
+        overflow-x: hidden;
       }
       
-      /* 首页样式 */
+      /* 动态背景 */
+      .background {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        background: radial-gradient(ellipse at 20% 20%, rgba(120, 0, 255, 0.3) 0%, transparent 50%),
+                    radial-gradient(ellipse at 80% 80%, rgba(0, 200, 255, 0.3) 0%, transparent 50%),
+                    radial-gradient(ellipse at 50% 50%, rgba(255, 0, 150, 0.15) 0%, transparent 70%);
+        animation: pulse 8s ease-in-out infinite;
+      }
+      
+      @keyframes pulse {
+        0%, 100% { opacity: 0.6; transform: scale(1); }
+        50% { opacity: 1; transform: scale(1.1); }
+      }
+      
+      /* 粒子效果 */
+      .particles {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        pointer-events: none;
+      }
+      
+      .particle {
+        position: absolute;
+        width: 4px;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.6);
+        border-radius: 50%;
+        animation: floatParticle 15s infinite;
+      }
+      
+      @keyframes floatParticle {
+        0%, 100% {
+          transform: translateY(0) translateX(0) scale(1);
+          opacity: 0;
+        }
+        10% {
+          opacity: 1;
+        }
+        90% {
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(-100vh) translateX(100px) scale(0);
+          opacity: 0;
+        }
+      }
+      
+      /* 主页容器 */
       .hero {
         min-height: 100vh;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        padding: 2rem;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 3rem 2rem;
         position: relative;
-        overflow: hidden;
       }
       
-      .hero::before {
-        content: '';
+      /* 顶部装饰线条 */
+      .top-line {
         position: absolute;
         top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.1" d="M0,192L48,197.3C96,203,192,213,288,229.3C384,245,480,267,576,250.7C672,235,768,181,864,181.3C960,181,1056,235,1152,234.7C1248,235,1344,181,1392,154.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>');
-        background-size: cover;
-        background-position: bottom;
-        animation: float 6s ease-in-out infinite;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60%;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, #7c3aed, transparent);
+        animation: expandLine 2s ease-out;
       }
       
-      @keyframes float {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-20px); }
+      @keyframes expandLine {
+        from { width: 0; }
+        to { width: 60%; }
       }
       
-      .hero-content {
+      /* 问候语 */
+      .greeting {
+        font-size: 1.5rem;
+        color: rgba(255,255,255,0.7);
+        margin-bottom: 1rem;
+        animation: fadeInDown 1s ease-out;
+      }
+      
+      @keyframes fadeInDown {
+        from {
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      
+      /* 主标题 */
+      .main-title {
+        font-size: clamp(3rem, 8vw, 6rem);
+        font-weight: 900;
+        margin-bottom: 1rem;
         text-align: center;
-        z-index: 1;
-        animation: fadeInUp 1s ease-out;
+        background: linear-gradient(135deg, #fff 0%, #a78bfa 25%, #60a5fa 50%, #a78bfa 75%, #fff 100%);
+        background-size: 200% auto;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: gradient 3s linear infinite, fadeInUp 1s ease-out 0.3s backwards;
+        text-shadow: 0 0 40px rgba(139, 92, 246, 0.5);
+      }
+      
+      @keyframes gradient {
+        to { background-position: 200% center; }
       }
       
       @keyframes fadeInUp {
@@ -66,97 +152,217 @@
         }
       }
       
-      .hero h1 {
-        font-size: 4rem;
+      /* 副标题打字机效果 */
+      .subtitle {
+        font-size: clamp(1.2rem, 3vw, 2rem);
+        color: rgba(255,255,255,0.8);
+        margin-bottom: 3rem;
+        text-align: center;
+        animation: fadeInUp 1s ease-out 0.6s backwards;
+        min-height: 3rem;
+      }
+      
+      .subtitle .typing-cursor {
+        display: inline-block;
+        width: 3px;
+        height: 1.2em;
+        background: #a78bfa;
+        margin-left: 4px;
+        animation: blink 1s infinite;
+        vertical-align: middle;
+      }
+      
+      @keyframes blink {
+        0%, 50% { opacity: 1; }
+        51%, 100% { opacity: 0; }
+      }
+      
+      /* 统计数据 */
+      .stats {
+        display: flex;
+        gap: 3rem;
+        margin-bottom: 4rem;
+        animation: fadeInUp 1s ease-out 0.9s backwards;
+      }
+      
+      .stat-item {
+        text-align: center;
+        padding: 1.5rem 2.5rem;
+        background: rgba(255,255,255,0.05);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 20px;
+        transition: all 0.3s ease;
+      }
+      
+      .stat-item:hover {
+        transform: translateY(-5px);
+        border-color: rgba(167, 139, 250, 0.5);
+        box-shadow: 0 20px 40px rgba(139, 92, 246, 0.2);
+      }
+      
+      .stat-item .number {
+        font-size: 2.5rem;
         font-weight: 800;
-        margin-bottom: 1rem;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        background: linear-gradient(135deg, #fff 0%, #f0f0f0 100%);
+        background: linear-gradient(135deg, #a78bfa 0%, #60a5fa 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
+        margin-bottom: 0.5rem;
       }
       
-      .hero p {
+      .stat-item .label {
+        font-size: 1rem;
+        color: rgba(255,255,255,0.7);
+        text-transform: uppercase;
+        letter-spacing: 2px;
+      }
+      
+      /* 分类卡片区域 */
+      .categories-section {
+        width: 100%;
+        max-width: 1400px;
+        animation: fadeInUp 1s ease-out 1.2s backwards;
+      }
+      
+      .section-title {
         font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 2rem;
+        text-align: center;
         color: rgba(255,255,255,0.9);
-        margin-bottom: 3rem;
-        max-width: 600px;
-        line-height: 1.6;
+        text-transform: uppercase;
+        letter-spacing: 4px;
       }
       
       .category-cards {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
         gap: 2rem;
-        max-width: 1200px;
-        width: 100%;
-        animation: fadeInUp 1s ease-out 0.3s backwards;
+        perspective: 1000px;
       }
       
       .category-card {
-        background: rgba(255,255,255,0.1);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255,255,255,0.2);
-        border-radius: 20px;
-        padding: 2.5rem;
+        background: rgba(255,255,255,0.03);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 24px;
+        padding: 3rem 2rem;
         text-align: center;
         cursor: pointer;
-        transition: all 0.3s ease;
+        transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
         position: relative;
         overflow: hidden;
+        transform-style: preserve-3d;
       }
       
       .category-card::before {
         content: '';
         position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: conic-gradient(
+          transparent,
+          rgba(167, 139, 250, 0.1),
+          transparent 30%
+        );
+        animation: rotate 4s linear infinite;
         opacity: 0;
-        transition: opacity 0.3s ease;
+        transition: opacity 0.5s ease;
       }
       
       .category-card:hover::before {
         opacity: 1;
       }
       
-      .category-card:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-        border-color: rgba(255,255,255,0.4);
+      @keyframes rotate {
+        100% { transform: rotate(360deg); }
       }
       
-      .category-card .icon {
-        font-size: 4rem;
-        margin-bottom: 1rem;
-        display: block;
+      .category-card::after {
+        content: '';
+        position: absolute;
+        inset: 2px;
+        background: rgba(10, 10, 10, 0.95);
+        border-radius: 22px;
+        z-index: 1;
+      }
+      
+      .category-card > * {
+        position: relative;
+        z-index: 2;
+      }
+      
+      .category-card:hover {
+        transform: translateY(-15px) rotateX(5deg);
+        border-color: rgba(167, 139, 250, 0.3);
+        box-shadow: 
+          0 25px 50px rgba(139, 92, 246, 0.3),
+          0 0 100px rgba(139, 92, 246, 0.1);
+      }
+      
+      .category-card .icon-container {
+        width: 100px;
+        height: 100px;
+        margin: 0 auto 1.5rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        background: linear-gradient(135deg, rgba(167, 139, 250, 0.2) 0%, rgba(96, 165, 250, 0.2) 100%);
+        border: 2px solid rgba(167, 139, 250, 0.3);
+        transition: all 0.5s ease;
+      }
+      
+      .category-card:hover .icon-container {
+        transform: scale(1.1) rotateY(360deg);
+        border-color: rgba(167, 139, 250, 0.6);
+        box-shadow: 0 0 30px rgba(139, 92, 246, 0.4);
       }
       
       .category-card h3 {
-        font-size: 1.8rem;
+        font-size: 2rem;
         font-weight: 700;
         margin-bottom: 0.5rem;
+        background: linear-gradient(135deg, #fff 0%, #a78bfa 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      
+      .category-card .description {
+        color: rgba(255,255,255,0.6);
+        font-size: 1rem;
+        margin-bottom: 1rem;
+        line-height: 1.6;
       }
       
       .category-card .count {
-        color: rgba(255,255,255,0.7);
-        font-size: 1rem;
+        display: inline-block;
+        background: rgba(167, 139, 250, 0.2);
+        color: #a78bfa;
+        padding: 0.5rem 1.5rem;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        border: 1px solid rgba(167, 139, 250, 0.3);
+        transition: all 0.3s ease;
       }
       
-      .tech-card { background: linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(139, 92, 246, 0.3) 100%); }
-      .life-card { background: linear-gradient(135deg, rgba(16, 185, 129, 0.3) 0%, rgba(5, 150, 105, 0.3) 100%); }
-      .essay-card { background: linear-gradient(135deg, rgba(245, 158, 11, 0.3) 0%, rgba(217, 119, 6, 0.3) 100%); }
-      .all-card { background: linear-gradient(135deg, rgba(236, 72, 153, 0.3) 0%, rgba(219, 39, 119, 0.3) 100%); }
+      .category-card:hover .count {
+        background: rgba(167, 139, 250, 0.3);
+        transform: scale(1.05);
+      }
       
-      /* 文章列表页面样式 */
+      /* 文章列表页面 */
       .posts-page {
         display: none;
-        max-width: 1200px;
+        max-width: 1400px;
         margin: 0 auto;
-        padding: 2rem;
+        padding: 3rem 2rem;
         animation: fadeIn 0.5s ease-out;
       }
       
@@ -166,66 +372,105 @@
       }
       
       .page-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 2rem;
-        padding-bottom: 1rem;
-        border-bottom: 1px solid rgba(255,255,255,0.1);
+        text-align: center;
+        margin-bottom: 3rem;
+        position: relative;
       }
       
       .page-header h1 {
-        font-size: 2.5rem;
-        font-weight: 700;
+        font-size: clamp(2rem, 5vw, 3.5rem);
+        font-weight: 800;
+        margin-bottom: 1rem;
+        background: linear-gradient(135deg, #fff 0%, #a78bfa 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      
+      .page-header::after {
+        content: '';
+        position: absolute;
+        bottom: -1rem;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100px;
+        height: 3px;
+        background: linear-gradient(90deg, transparent, #a78bfa, transparent);
       }
       
       .back-btn {
-        background: rgba(255,255,255,0.1);
-        border: 1px solid rgba(255,255,255,0.2);
+        position: absolute;
+        top: 0;
+        left: 0;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
         color: white;
-        padding: 0.75rem 1.5rem;
-        border-radius: 10px;
+        padding: 1rem 2rem;
+        border-radius: 12px;
         cursor: pointer;
         transition: all 0.3s ease;
         font-size: 1rem;
+        font-weight: 600;
+        backdrop-filter: blur(10px);
       }
       
       .back-btn:hover {
-        background: rgba(255,255,255,0.2);
+        background: rgba(167, 139, 250, 0.2);
+        border-color: rgba(167, 139, 250, 0.4);
         transform: translateX(-5px);
       }
       
       .post-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
         gap: 2rem;
       }
       
       .post-card {
-        background: rgba(255,255,255,0.05);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 16px;
+        background: rgba(255,255,255,0.03);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 20px;
         padding: 2rem;
-        transition: all 0.3s ease;
+        transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
         cursor: pointer;
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .post-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #7c3aed, #3b82f6);
+        transform: scaleX(0);
+        transition: transform 0.4s ease;
+      }
+      
+      .post-card:hover::before {
+        transform: scaleX(1);
       }
       
       .post-card:hover {
-        transform: translateY(-5px);
-        background: rgba(255,255,255,0.08);
-        border-color: rgba(255,255,255,0.2);
+        transform: translateY(-10px);
+        background: rgba(255,255,255,0.05);
+        border-color: rgba(167, 139, 250, 0.2);
+        box-shadow: 0 20px 40px rgba(139, 92, 246, 0.15);
       }
       
       .post-card .post-category {
         display: inline-block;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%);
         color: white;
-        padding: 0.5rem 1rem;
+        padding: 0.5rem 1.25rem;
         border-radius: 20px;
         font-size: 0.875rem;
         font-weight: 600;
         margin-bottom: 1rem;
+        box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
       }
       
       .post-card h3 {
@@ -233,17 +478,25 @@
         font-weight: 700;
         margin-bottom: 0.75rem;
         line-height: 1.4;
+        color: white;
       }
       
       .post-card .post-date {
-        color: rgba(255,255,255,0.6);
+        color: rgba(255,255,255,0.5);
         font-size: 0.875rem;
         margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      
+      .post-card .post-date::before {
+        content: '📅';
       }
       
       .post-card p {
         color: rgba(255,255,255,0.7);
-        line-height: 1.6;
+        line-height: 1.7;
         font-size: 1rem;
         display: -webkit-box;
         -webkit-line-clamp: 3;
@@ -253,59 +506,115 @@
       
       .no-posts {
         text-align: center;
-        padding: 4rem;
+        padding: 6rem;
         color: rgba(255,255,255,0.6);
-        font-size: 1.25rem;
+        font-size: 1.5rem;
+      }
+      
+      /* 响应式设计 */
+      @media (max-width: 1024px) {
+        .stats {
+          gap: 1.5rem;
+        }
+        .stat-item {
+          padding: 1rem 1.5rem;
+        }
+        .stat-item .number {
+          font-size: 2rem;
+        }
       }
       
       @media (max-width: 768px) {
-        .hero h1 {
-          font-size: 2.5rem;
+        .hero {
+          padding: 2rem 1.5rem;
         }
-        .hero p {
-          font-size: 1.1rem;
+        .stats {
+          flex-direction: column;
+          gap: 1rem;
+          width: 100%;
+        }
+        .stat-item {
+          width: 100%;
         }
         .category-cards {
           grid-template-columns: 1fr;
         }
+        .back-btn {
+          position: static;
+          margin-bottom: 2rem;
+          width: 100%;
+        }
         .page-header {
-          flex-direction: column;
-          gap: 1rem;
           text-align: center;
         }
       }
     </style>
   </head>
   <body>
+    <!-- 动态背景 -->
+    <div class="background"></div>
+    
+    <!-- 粒子效果 -->
+    <div class="particles" id="particles"></div>
+    
     <!-- 首页 -->
     <div id="hero" class="hero">
-      <div class="hero-content">
-        <h1>✨ 我的博客</h1>
-        <p>探索技术、分享生活、记录感悟</p>
+      <div class="top-line"></div>
+      
+      <p class="greeting">👋 欢迎来到</p>
+      
+      <h1 class="main-title">我的博客</h1>
+      
+      <p class="subtitle">
+        <span id="typing-text"></span>
+        <span class="typing-cursor"></span>
+      </p>
+      
+      <div class="stats">
+        <div class="stat-item">
+          <div class="number">6</div>
+          <div class="label">文章</div>
+        </div>
+        <div class="stat-item">
+          <div class="number">3</div>
+          <div class="label">分类</div>
+        </div>
+        <div class="stat-item">
+          <div class="number">∞</div>
+          <div class="label">成长</div>
+        </div>
+      </div>
+      
+      <div class="categories-section">
+        <h2 class="section-title">选择一个分类开始探索</h2>
         
         <div class="category-cards">
-          <div class="category-card all-card" onclick="showPosts('全部')">
-            <span class="icon">📚</span>
+          <div class="category-card" onclick="showPosts('全部')">
+            <div class="icon-container">📚</div>
             <h3>全部文章</h3>
-            <p class="count">6 篇文章</p>
+            <p class="description">浏览所有精彩内容</p>
+            <span class="count">6 篇文章</span>
           </div>
           
-          <div class="category-card tech-card" onclick="showPosts('技术')">
-            <span class="icon">💻</span>
+          <div class="category-card" onclick="showPosts('技术')">
+            <div class="icon-container">💻</div>
             <h3>技术</h3>
-            <p class="count">3 篇文章</p>
+            <p class="description">编程、开发、技术分享</p>
+            <span class="count">3 篇文章</span>
           </div>
           
-          <div class="category-card life-card" onclick="showPosts('生活')">
-            <span class="icon">🌱</span>
+          <div class="category-card" onclick="showPosts('生活')">
+            <div class="icon-container">🌱</div>
             <h3>生活</h3>
-            <p class="count">2 篇文章</p>
+            <p class="description">日常、感悟、生活记录</p>
+            <span class="count">2 篇文章</span>
           </div>
           
-          <div class="category-card essay-card" onclick="showPosts('随笔')">
-            <span class="icon">✍️</span>
+          <div class="category-card" onclick="showPosts('随笔')">
+            <div class="icon-container">✍️</div>
             <h3>随笔</h3>
-            <p class="count">1 篇文章</p>
+            <p class="description">思考、随笔、心情日记</p>
+            <span class="count">1 篇文章</span>
           </div>
         </div>
       </div>
@@ -314,8 +623,8 @@
     <!-- 文章列表页面 -->
     <div id="posts-page" class="posts-page">
       <div class="page-header">
-        <h1 id="page-title">全部文章</h1>
         <button class="back-btn" onclick="goHome()">← 返回首页</button>
+        <h1 id="page-title">全部文章</h1>
       </div>
       
       <div id="posts-container" class="post-grid">
@@ -324,6 +633,37 @@
     </div>
 
     <script>
+      // 生成粒子
+      function createParticles() {
+        const particlesContainer = document.getElementById('particles');
+        for (let i = 0; i < 50; i++) {
+          const particle = document.createElement('div');
+          particle.className = 'particle';
+          particle.style.left = Math.random() * 100 + '%';
+          particle.style.animationDelay = Math.random() * 15 + 's';
+          particle.style.animationDuration = (10 + Math.random() * 10) + 's';
+          particlesContainer.appendChild(particle);
+        }
+      }
+      
+      // 打字机效果
+      function typeWriter(text, elementId, speed = 100) {
+        const element = document.getElementById(elementId);
+        let i = 0;
+        element.textContent = '';
+        
+        function type() {
+          if (i < text.length) {
+            element.textContent += text.charAt(i);
+            i++;
+            setTimeout(type, speed);
+          }
+        }
+        
+        type();
+      }
+      
+      // 文章数据
       const posts = [
         {
           id: 1,
@@ -369,27 +709,24 @@
         }
       ];
       
+      // 显示文章列表
       function showPosts(category) {
         const hero = document.getElementById('hero');
         const postsPage = document.getElementById('posts-page');
         const pageTitle = document.getElementById('page-title');
         const postsContainer = document.getElementById('posts-container');
         
-        // 隐藏首页，显示文章列表
         hero.style.display = 'none';
         postsPage.style.display = 'block';
         
-        // 更新标题
         pageTitle.textContent = category === '全部' ? '全部文章' : category + '文章';
         
-        // 筛选文章
         const filteredPosts = category === '全部' 
           ? posts 
           : posts.filter(post => post.category === category);
         
-        // 生成文章卡片
         if (filteredPosts.length === 0) {
-          postsContainer.innerHTML = '<div class="no-posts">该分类下暂无文章</div>';
+          postsContainer.innerHTML = '<div class="no-posts">该分类下暂无文章 📭</div>';
         } else {
           postsContainer.innerHTML = filteredPosts.map(post => `
             <div class="post-card" onclick="showPostDetail('${post.title}')">
@@ -402,17 +739,32 @@
         }
       }
       
+      // 返回首页
       function goHome() {
         const hero = document.getElementById('hero');
         const postsPage = document.getElementById('posts-page');
         
         hero.style.display = 'flex';
         postsPage.style.display = 'none';
+        
+        // 重新启动打字机效果
+        setTimeout(() => {
+          typeWriter('探索技术 · 分享生活 · 记录感悟', 'typing-text', 80);
+        }, 500);
       }
       
+      // 显示文章详情
       function showPostDetail(title) {
         alert('文章详情页面功能开发中...\n\n您点击了：' + title);
       }
+      
+      // 初始化
+      document.addEventListener('DOMContentLoaded', () => {
+        createParticles();
+        setTimeout(() => {
+          typeWriter('探索技术 · 分享生活 · 记录感悟', 'typing-text', 80);
+        }, 1500);
+      });
     </script>
   </body>
 </html>
