@@ -177,10 +177,10 @@
         51%, 100% { opacity: 0; }
       }
       
-      /* 底部科技感个人信息 */
+      /* 右上角科技感个人信息 */
       .tech-profile {
         position: fixed;
-        bottom: 20px;
+        top: 40px;
         right: 20px;
         z-index: 1000;
         font-family: 'Courier New', monospace;
@@ -712,7 +712,7 @@
       
       @media (max-width: 768px) {
         .tech-profile {
-          bottom: 10px;
+          top: 10px;
           right: 10px;
         }
         
@@ -741,20 +741,21 @@
         }
         
         .profile-social-hud {
-          right: 100%;
-          left: auto;
-          top: 50%;
-          transform: translateY(-50%) translateX(-10px);
-          min-width: 160px;
+          right: auto;
+          left: 50%;
+          top: 100%;
+          transform: translateX(-50%) translateY(-10px);
+          min-width: 180px;
         }
         
         .profile-hud:hover .profile-social-hud {
-          transform: translateY(-50%) translateX(-15px);
+          transform: translateX(-50%) translateY(10px);
         }
         
         .social-link-hud {
           font-size: 0.7rem;
           padding: 6px 10px;
+          clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
         }
         
         .hero {
