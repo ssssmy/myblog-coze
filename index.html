@@ -197,12 +197,11 @@
         backdrop-filter: blur(5px);
         transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
         cursor: pointer;
-        min-width: auto;
-        transform-origin: right center;
+        transform-origin: center right;
       }
       
       .profile-hud:hover {
-        transform: scale(1.25);
+        transform: scale(1.1);
         border-color: rgba(0, 255, 255, 0.8);
         box-shadow: 
           0 0 40px rgba(0, 255, 255, 0.5),
@@ -292,9 +291,9 @@
       /* 社交链接容器 */
       .profile-social-hud {
         position: absolute;
-        right: 0;
+        right: 100%;
         top: 50%;
-        transform: translateY(-50%) translateX(120%);
+        transform: translateY(-50%) translateX(-10px);
         display: flex;
         flex-direction: column;
         gap: 8px;
@@ -306,7 +305,7 @@
       }
       
       .profile-hud:hover .profile-social-hud {
-        transform: translateY(-50%) translateX(100%);
+        transform: translateY(-50%) translateX(-15px);
         opacity: 1;
         pointer-events: auto;
       }
@@ -723,7 +722,7 @@
         }
         
         .profile-hud:hover {
-          transform: scale(1.15);
+          transform: scale(1.05);
           padding: 12px 16px;
         }
         
@@ -743,10 +742,10 @@
         
         .profile-social-hud {
           right: auto;
-          left: 0;
+          left: 50%;
           top: 100%;
           transform: translateX(-50%) translateY(-10px);
-          min-width: 200px;
+          min-width: 180px;
         }
         
         .profile-hud:hover .profile-social-hud {
