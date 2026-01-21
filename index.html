@@ -389,45 +389,47 @@
         100% { background-position: 200% 0%; }
       }
       
-      /* 统计数据 */
+      /* 统计数据 - 极简数字展示 */
       .stats {
         display: flex;
-        gap: 3rem;
+        gap: 6rem;
         margin-bottom: 4rem;
         animation: fadeInUp 1s ease-out 1.1s backwards;
       }
       
       .stat-item {
         text-align: center;
-        padding: 1.5rem 2.5rem;
-        background: rgba(255,255,255,0.05);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 20px;
-        transition: all 0.3s ease;
-      }
-      
-      .stat-item:hover {
-        transform: translateY(-5px);
-        border-color: rgba(167, 139, 250, 0.5);
-        box-shadow: 0 20px 40px rgba(139, 92, 246, 0.2);
+        position: relative;
       }
       
       .stat-item .number {
-        font-size: 2.5rem;
-        font-weight: 800;
-        background: linear-gradient(135deg, #a78bfa 0%, #60a5fa 100%);
+        font-size: 4rem;
+        font-weight: 900;
+        background: linear-gradient(135deg, #fff 0%, #a78bfa 50%, #60a5fa 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
-        margin-bottom: 0.5rem;
+        line-height: 1;
+        text-shadow: 0 0 60px rgba(167, 139, 250, 0.5);
+        animation: glow 3s ease-in-out infinite;
+      }
+      
+      @keyframes glow {
+        0%, 100% {
+          text-shadow: 0 0 60px rgba(167, 139, 250, 0.5);
+        }
+        50% {
+          text-shadow: 0 0 100px rgba(167, 139, 250, 0.8), 0 0 150px rgba(96, 165, 250, 0.6);
+        }
       }
       
       .stat-item .label {
-        font-size: 1rem;
-        color: rgba(255,255,255,0.7);
+        font-size: 0.875rem;
+        color: rgba(255,255,255,0.5);
         text-transform: uppercase;
-        letter-spacing: 2px;
+        letter-spacing: 4px;
+        margin-top: 0.75rem;
+        font-weight: 600;
       }
       
       /* 分类卡片区域 */
@@ -958,6 +960,36 @@
         type();
       }
       
+      // 数字增长动画
+      function animateNumbers() {
+        const numberElements = document.querySelectorAll('.stat-item .number');
+        numberElements.forEach(el => {
+          const text = el.textContent;
+          const targetNumber = text === '∞' ? null : parseInt(text);
+          
+          if (targetNumber !== null) {
+            let currentNumber = 0;
+            const duration = 2000; // 2秒完成动画
+            const steps = 60; // 60帧
+            const increment = targetNumber / steps;
+            const stepTime = duration / steps;
+            
+            const animate = () => {
+              currentNumber += increment;
+              if (currentNumber < targetNumber) {
+                el.textContent = Math.floor(currentNumber);
+                setTimeout(animate, stepTime);
+              } else {
+                el.textContent = targetNumber;
+              }
+            };
+            
+            // 延迟启动，等待其他动画完成
+            setTimeout(animate, 1500);
+          }
+        });
+      }
+      
       // 显示文章列表
       async function showPosts(category) {
         const hero = document.getElementById('hero');
@@ -1121,6 +1153,9 @@
         setTimeout(() => {
           typeWriter('探索技术 · 分享生活 · 记录感悟', 'typing-text', 80);
         }, 1500);
+        
+        // 启动数字增长动画
+        animateNumbers();
         
         // 加载分类统计
         await loadCategoryStats();
