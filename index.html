@@ -1143,11 +1143,7 @@
         let opacity = 1 - (scrollY / vh);
         opacity = Math.max(0, Math.min(1, opacity));
         
-        // 添加轻微的上移效果
-        const translateY = scrollY * 0.3;
-        
         profileHud.style.opacity = opacity.toString();
-        profileHud.style.transform = `translateY(${translateY}px)`;
         
         // 当完全隐藏时，禁用交互
         if (opacity <= 0) {
