@@ -17,34 +17,65 @@ set "PROJECT_ROOT=%SCRIPT_DIR%.."
 REM 日志目录
 set "LOG_DIR=%PROJECT_ROOT%\logs"
 
-REM 停止服务
-:stop_service
-set service_name=%~1
-set port=%~2
-
+REM 停止端口 3001 的服务
 echo.
-echo 🛑 停止 %service_name% (端口 %port%)...
-
-REM 使用更精确的端口匹配
-netstat -ano | findstr ":%port% " >nul
+echo 🛑 停止主项目后端 (端口 3001)...
+netstat -ano | findstr ":3001 " >nul
 if %errorlevel% equ 0 (
-    for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":%port% "') do (
+    for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":3001 "') do (
         taskkill /F /PID %%a >nul 2>&1
         if !errorlevel! equ 0 (
-            echo   ✅ %service_name% 已停止 (PID: %%a)
+            echo   ✅ 主项目后端已停止 (PID: %%a)
         )
     )
 ) else (
-    echo   ℹ️  %service_name% 未运行
+    echo   ℹ️  主项目后端未运行
 )
 
-goto :eof
+REM 停止端口 3002 的服务
+echo.
+echo 🛑 停止管理后台后端 (端口 3002)...
+netstat -ano | findstr ":3002 " >nul
+if %errorlevel% equ 0 (
+    for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":3002 "') do (
+        taskkill /F /PID %%a >nul 2>&1
+        if !errorlevel! equ 0 (
+            echo   ✅ 管理后台后端已停止 (PID: %%a)
+        )
+    )
+) else (
+    echo   ℹ️  管理后台后端未运行
+)
 
-REM 停止所有服务
-call :stop_service master-backend 3001
-call :stop_service admin-backend 3002
-call :stop_service master-frontend 5000
-call :stop_service admin-frontend 5001
+REM 停止端口 5000 的服务
+echo.
+echo 🛑 停止主项目前端 (端口 5000)...
+netstat -ano | findstr ":5000 " >nul
+if %errorlevel% equ 0 (
+    for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":5000 "') do (
+        taskkill /F /PID %%a >nul 2>&1
+        if !errorlevel! equ 0 (
+            echo   ✅ 主项目前端已停止 (PID: %%a)
+        )
+    )
+) else (
+    echo   ℹ️  主项目前端未运行
+)
+
+REM 停止端口 5001 的服务
+echo.
+echo 🛑 停止管理后台前端 (端口 5001)...
+netstat -ano | findstr ":5001 " >nul
+if %errorlevel% equ 0 (
+    for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":5001 "') do (
+        taskkill /F /PID %%a >nul 2>&1
+        if !errorlevel! equ 0 (
+            echo   ✅ 管理后台前端已停止 (PID: %%a)
+        )
+    )
+) else (
+    echo   ℹ️  管理后台前端未运行
+)
 
 echo.
 echo ======================================

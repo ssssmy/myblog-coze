@@ -177,6 +177,17 @@ scripts\start-all.bat
 
 详细脚本说明请查看 [scripts/README.md](scripts/README.md)
 
+#### 端口检查和故障排除
+
+如果遇到端口占用问题，可以使用以下工具：
+
+**检查端口状态**
+- Windows: `scripts\check-ports.bat`
+- Linux/macOS: `bash scripts/check-ports.sh`
+
+**故障排除指南**
+详细的故障排除步骤请查看 [scripts/TROUBLESHOOTING.md](scripts/TROUBLESHOOTING.md)
+
 ### 手动启动
 
 #### 主项目

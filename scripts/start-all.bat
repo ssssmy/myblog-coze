@@ -18,61 +18,41 @@ REM 日志目录
 set "LOG_DIR=%PROJECT_ROOT%\logs"
 if not exist "%LOG_DIR%" mkdir "%LOG_DIR%"
 
-REM 检查端口是否被占用
-:check_port
-netstat -ano | findstr ":%1" >nul
-if %errorlevel% equ 0 (
-    echo ⚠️  端口 %1 已被占用
-    exit /b 1
-)
-exit /b 0
-
 REM 停止已存在的服务
-:stop_existing_services
 echo.
 echo 📋 检查并停止已存在的服务...
 
-REM 使用更精确的端口匹配，避免误杀
-netstat -ano | findstr ":5000 " >nul
-if %errorlevel% equ 0 (
-    for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":5000 "') do (
-        echo   停止端口 5000 的服务 (PID: %%a)
-        taskkill /F /PID %%a >nul 2>&1
-        timeout /t 1 >nul
-    )
+REM 停止端口 3001 的服务
+for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":3001 "') do (
+    echo   停止端口 3001 的服务 (PID: %%a)
+    taskkill /F /PID %%a >nul 2>&1
+    timeout /t 1 >nul
 )
 
-netstat -ano | findstr ":5001 " >nul
-if %errorlevel% equ 0 (
-    for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":5001 "') do (
-        echo   停止端口 5001 的服务 (PID: %%a)
-        taskkill /F /PID %%a >nul 2>&1
-        timeout /t 1 >nul
-    )
+REM 停止端口 3002 的服务
+for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":3002 "') do (
+    echo   停止端口 3002 的服务 (PID: %%a)
+    taskkill /F /PID %%a >nul 2>&1
+    timeout /t 1 >nul
 )
 
-netstat -ano | findstr ":3001 " >nul
-if %errorlevel% equ 0 (
-    for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":3001 "') do (
-        echo   停止端口 3001 的服务 (PID: %%a)
-        taskkill /F /PID %%a >nul 2>&1
-        timeout /t 1 >nul
-    )
+REM 停止端口 5000 的服务
+for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":5000 "') do (
+    echo   停止端口 5000 的服务 (PID: %%a)
+    taskkill /F /PID %%a >nul 2>&1
+    timeout /t 1 >nul
 )
 
-netstat -ano | findstr ":3002 " >nul
-if %errorlevel% equ 0 (
-    for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":3002 "') do (
-        echo   停止端口 3002 的服务 (PID: %%a)
-        taskkill /F /PID %%a >nul 2>&1
-        timeout /t 1 >nul
-    )
+REM 停止端口 5001 的服务
+for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":5001 "') do (
+    echo   停止端口 5001 的服务 (PID: %%a)
+    taskkill /F /PID %%a >nul 2>&1
+    timeout /t 1 >nul
 )
+
 echo   ✅ 已清理完成
-goto :eof
 
 REM 启动主项目后端
-:start_master_backend
 echo.
 echo 🚀 启动主项目后端 (端口 3001)...
 cd /d "%PROJECT_ROOT%\master\backend"
@@ -86,6 +66,7 @@ if not exist "node_modules" (
 start /B "" cmd /c "npm start > \"%LOG_DIR%\master-backend.log\" 2>&1"
 
 REM 等待服务启动
+echo   等待服务启动...
 timeout /t 5 >nul
 netstat -ano | findstr ":3001 " >nul
 if %errorlevel% equ 0 (
@@ -95,10 +76,8 @@ if %errorlevel% equ 0 (
     pause
     exit /b 1
 )
-goto :eof
 
 REM 启动主项目前端
-:start_master_frontend
 echo.
 echo 🚀 启动主项目前端 (端口 5000)...
 cd /d "%PROJECT_ROOT%\master\frontend"
@@ -112,6 +91,7 @@ if not exist "node_modules" (
 start /B "" cmd /c "pnpm dev > \"%LOG_DIR%\master-frontend.log\" 2>&1"
 
 REM 等待服务启动
+echo   等待服务启动...
 timeout /t 5 >nul
 netstat -ano | findstr ":5000 " >nul
 if %errorlevel% equ 0 (
@@ -121,10 +101,8 @@ if %errorlevel% equ 0 (
     pause
     exit /b 1
 )
-goto :eof
 
 REM 启动管理后台后端
-:start_admin_backend
 echo.
 echo 🚀 启动管理后台后端 (端口 3002)...
 cd /d "%PROJECT_ROOT%\admin\backend"
@@ -138,6 +116,7 @@ if not exist "node_modules" (
 start /B "" cmd /c "npm start > \"%LOG_DIR%\admin-backend.log\" 2>&1"
 
 REM 等待服务启动
+echo   等待服务启动...
 timeout /t 5 >nul
 netstat -ano | findstr ":3002 " >nul
 if %errorlevel% equ 0 (
@@ -147,10 +126,8 @@ if %errorlevel% equ 0 (
     pause
     exit /b 1
 )
-goto :eof
 
 REM 启动管理后台前端
-:start_admin_frontend
 echo.
 echo 🚀 启动管理后台前端 (端口 5001)...
 cd /d "%PROJECT_ROOT%\admin\frontend"
@@ -164,6 +141,7 @@ if not exist "node_modules" (
 start /B "" cmd /c "npm run dev > \"%LOG_DIR%\admin-frontend.log\" 2>&1"
 
 REM 等待服务启动
+echo   等待服务启动...
 timeout /t 5 >nul
 netstat -ano | findstr ":5001 " >nul
 if %errorlevel% equ 0 (
@@ -173,10 +151,8 @@ if %errorlevel% equ 0 (
     pause
     exit /b 1
 )
-goto :eof
 
 REM 显示服务状态
-:show_status
 echo.
 echo ======================================
 echo   服务状态
@@ -197,19 +173,6 @@ echo.
 echo 🛑 停止服务：
 echo   scripts\stop-all.bat
 echo.
-goto :eof
-
-REM 主流程
-cd /d "%PROJECT_ROOT%"
-
-call :stop_existing_services
-
-call :start_master_backend
-call :start_master_frontend
-call :start_admin_backend
-call :start_admin_frontend
-
-call :show_status
 
 echo ======================================
 echo   ✅ 所有服务启动完成！

@@ -19,7 +19,6 @@ set "LOG_DIR=%PROJECT_ROOT%\logs"
 if not exist "%LOG_DIR%" mkdir "%LOG_DIR%"
 
 REM 启动管理后台后端
-:start_admin_backend
 echo.
 echo 🚀 启动管理后台后端 (端口 3002)...
 cd /d "%PROJECT_ROOT%\admin\backend"
@@ -33,6 +32,7 @@ if not exist "node_modules" (
 start /B "" cmd /c "npm start > \"%LOG_DIR%\admin-backend.log\" 2>&1"
 
 REM 等待服务启动
+echo   等待服务启动...
 timeout /t 5 >nul
 netstat -ano | findstr ":3002 " >nul
 if %errorlevel% equ 0 (
@@ -42,10 +42,8 @@ if %errorlevel% equ 0 (
     pause
     exit /b 1
 )
-goto :eof
 
 REM 启动管理后台前端
-:start_admin_frontend
 echo.
 echo 🚀 启动管理后台前端 (端口 5001)...
 cd /d "%PROJECT_ROOT%\admin\frontend"
@@ -59,6 +57,7 @@ if not exist "node_modules" (
 start /B "" cmd /c "npm run dev > \"%LOG_DIR%\admin-frontend.log\" 2>&1"
 
 REM 等待服务启动
+echo   等待服务启动...
 timeout /t 5 >nul
 netstat -ano | findstr ":5001 " >nul
 if %errorlevel% equ 0 (
@@ -68,10 +67,8 @@ if %errorlevel% equ 0 (
     pause
     exit /b 1
 )
-goto :eof
 
 REM 显示服务状态
-:show_status
 echo.
 echo ======================================
 echo   管理后台已启动
@@ -89,15 +86,6 @@ echo 📝 日志文件：
 echo   管理后台后端:   %LOG_DIR%\admin-backend.log
 echo   管理后台前端:   %LOG_DIR%\admin-frontend.log
 echo.
-goto :eof
-
-REM 主流程
-cd /d "%PROJECT_ROOT%"
-
-call :start_admin_backend
-call :start_admin_frontend
-
-call :show_status
 
 echo ======================================
 echo   ✅ 管理后台启动完成！
