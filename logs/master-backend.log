@@ -14,3 +14,4 @@
    GET  /api/categories    - 获取所有分类
    GET  /api/stats         - 获取统计信息
    GET  /api/profile       - 获取个人信息
+Terminated
