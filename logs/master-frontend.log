@@ -10,3 +10,4 @@ Starting HTTP service on port 5000 for dev...
 
   ➜  Local:   http://localhost:5000/
   ➜  Network: use --host to expose
+ ELIFECYCLE  Command failed with exit code 143.
