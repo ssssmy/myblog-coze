@@ -1,0 +1,27 @@
+{
+  "name": "blog-admin-frontend",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "vue": "^3.5.27",
+    "vue-router": "^4.6.4",
+    "pinia": "^3.0.1",
+    "element-plus": "^2.9.7",
+    "@element-plus/icons-vue": "^2.3.1",
+    "axios": "^1.8.2",
+    "marked": "^17.0.1",
+    "dayjs": "^1.11.13"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.3",
+    "typescript": "^5.6.0",
+    "vue-tsc": "^2.2.4",
+    "vite": "^7.2.4",
+    "sass": "^1.85.1"
+  }
+}
