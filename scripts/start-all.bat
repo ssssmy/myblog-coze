@@ -31,13 +31,44 @@ REM 停止已存在的服务
 :stop_existing_services
 echo.
 echo 📋 检查并停止已存在的服务...
-for %%p in (3001 3002 5000 5001) do (
-    for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":%%p"') do (
-        echo   停止端口 %%p 的服务 (PID: %%a)
+
+REM 使用更精确的端口匹配，避免误杀
+netstat -ano | findstr ":5000 " >nul
+if %errorlevel% equ 0 (
+    for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":5000 "') do (
+        echo   停止端口 5000 的服务 (PID: %%a)
         taskkill /F /PID %%a >nul 2>&1
         timeout /t 1 >nul
     )
 )
+
+netstat -ano | findstr ":5001 " >nul
+if %errorlevel% equ 0 (
+    for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":5001 "') do (
+        echo   停止端口 5001 的服务 (PID: %%a)
+        taskkill /F /PID %%a >nul 2>&1
+        timeout /t 1 >nul
+    )
+)
+
+netstat -ano | findstr ":3001 " >nul
+if %errorlevel% equ 0 (
+    for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":3001 "') do (
+        echo   停止端口 3001 的服务 (PID: %%a)
+        taskkill /F /PID %%a >nul 2>&1
+        timeout /t 1 >nul
+    )
+)
+
+netstat -ano | findstr ":3002 " >nul
+if %errorlevel% equ 0 (
+    for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":3002 "') do (
+        echo   停止端口 3002 的服务 (PID: %%a)
+        taskkill /F /PID %%a >nul 2>&1
+        timeout /t 1 >nul
+    )
+)
+echo   ✅ 已清理完成
 goto :eof
 
 REM 启动主项目后端
@@ -55,8 +86,8 @@ if not exist "node_modules" (
 start /B "" cmd /c "npm start > \"%LOG_DIR%\master-backend.log\" 2>&1"
 
 REM 等待服务启动
-timeout /t 3 >nul
-netstat -ano | findstr ":3001" >nul
+timeout /t 5 >nul
+netstat -ano | findstr ":3001 " >nul
 if %errorlevel% equ 0 (
     echo   ✅ 主项目后端启动成功
 ) else (
@@ -81,8 +112,8 @@ if not exist "node_modules" (
 start /B "" cmd /c "pnpm dev > \"%LOG_DIR%\master-frontend.log\" 2>&1"
 
 REM 等待服务启动
-timeout /t 3 >nul
-netstat -ano | findstr ":5000" >nul
+timeout /t 5 >nul
+netstat -ano | findstr ":5000 " >nul
 if %errorlevel% equ 0 (
     echo   ✅ 主项目前端启动成功
 ) else (
@@ -107,8 +138,8 @@ if not exist "node_modules" (
 start /B "" cmd /c "npm start > \"%LOG_DIR%\admin-backend.log\" 2>&1"
 
 REM 等待服务启动
-timeout /t 3 >nul
-netstat -ano | findstr ":3002" >nul
+timeout /t 5 >nul
+netstat -ano | findstr ":3002 " >nul
 if %errorlevel% equ 0 (
     echo   ✅ 管理后台后端启动成功
 ) else (
@@ -133,8 +164,8 @@ if not exist "node_modules" (
 start /B "" cmd /c "npm run dev > \"%LOG_DIR%\admin-frontend.log\" 2>&1"
 
 REM 等待服务启动
-timeout /t 3 >nul
-netstat -ano | findstr ":5001" >nul
+timeout /t 5 >nul
+netstat -ano | findstr ":5001 " >nul
 if %errorlevel% equ 0 (
     echo   ✅ 管理后台前端启动成功
 ) else (

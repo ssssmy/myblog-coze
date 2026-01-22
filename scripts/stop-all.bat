@@ -25,11 +25,17 @@ set port=%~2
 echo.
 echo 🛑 停止 %service_name% (端口 %port%)...
 
-for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":%port%"') do (
-    taskkill /F /PID %%a >nul 2>&1
-    if !errorlevel! equ 0 (
-        echo   ✅ %service_name% 已停止 (PID: %%a)
+REM 使用更精确的端口匹配
+netstat -ano | findstr ":%port% " >nul
+if %errorlevel% equ 0 (
+    for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":%port% "') do (
+        taskkill /F /PID %%a >nul 2>&1
+        if !errorlevel! equ 0 (
+            echo   ✅ %service_name% 已停止 (PID: %%a)
+        )
     )
+) else (
+    echo   ℹ️  %service_name% 未运行
 )
 
 goto :eof

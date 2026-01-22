@@ -20,7 +20,7 @@ mkdir -p "$LOG_DIR"
 check_port() {
     local port=$1
     local service=$2
-    if ss -tuln 2>/dev/null | grep -q ":${port}" | grep -q LISTEN; then
+    if ss -tuln 2>/dev/null | grep -q ":${port}[[:space:]]" | grep -q LISTEN; then
         echo "⚠️  端口 $port 已被占用 ($service)"
         return 1
     fi
@@ -56,8 +56,8 @@ start_master_backend() {
     echo $! > "$LOG_DIR/master-backend.pid"
 
     # 等待服务启动
-    sleep 3
-    if ss -tuln 2>/dev/null | grep -q ":3001"; then
+    sleep 5
+    if ss -tuln 2>/dev/null | grep -q ":3001[[:space:]]"; then
         echo "  ✅ 主项目后端启动成功"
     else
         echo "  ❌ 主项目后端启动失败，查看日志: tail -f $LOG_DIR/master-backend.log"
@@ -81,8 +81,8 @@ start_master_frontend() {
     echo $! > "$LOG_DIR/master-frontend.pid"
 
     # 等待服务启动
-    sleep 3
-    if ss -tuln 2>/dev/null | grep -q ":5000"; then
+    sleep 5
+    if ss -tuln 2>/dev/null | grep -q ":5000[[:space:]]"; then
         echo "  ✅ 主项目前端启动成功"
     else
         echo "  ❌ 主项目前端启动失败，查看日志: tail -f $LOG_DIR/master-frontend.log"
@@ -106,8 +106,8 @@ start_admin_backend() {
     echo $! > "$LOG_DIR/admin-backend.pid"
 
     # 等待服务启动
-    sleep 3
-    if ss -tuln 2>/dev/null | grep -q ":3002"; then
+    sleep 5
+    if ss -tuln 2>/dev/null | grep -q ":3002[[:space:]]"; then
         echo "  ✅ 管理后台后端启动成功"
     else
         echo "  ❌ 管理后台后端启动失败，查看日志: tail -f $LOG_DIR/admin-backend.log"
@@ -131,8 +131,8 @@ start_admin_frontend() {
     echo $! > "$LOG_DIR/admin-frontend.pid"
 
     # 等待服务启动
-    sleep 3
-    if ss -tuln 2>/dev/null | grep -q ":5001"; then
+    sleep 5
+    if ss -tuln 2>/dev/null | grep -q ":5001[[:space:]]"; then
         echo "  ✅ 管理后台前端启动成功"
     else
         echo "  ❌ 管理后台前端启动失败，查看日志: tail -f $LOG_DIR/admin-frontend.log"

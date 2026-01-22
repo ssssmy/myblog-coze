@@ -31,8 +31,8 @@ start_admin_backend() {
     nohup npm start > "$LOG_DIR/admin-backend.log" 2>&1 &
     echo $! > "$LOG_DIR/admin-backend.pid"
 
-    sleep 3
-    if ss -tuln 2>/dev/null | grep -q ":3002"; then
+    sleep 5
+    if ss -tuln 2>/dev/null | grep -q ":3002[[:space:]]"; then
         echo "  ✅ 管理后台后端启动成功"
     else
         echo "  ❌ 管理后台后端启动失败，查看日志: tail -f $LOG_DIR/admin-backend.log"
@@ -55,8 +55,8 @@ start_admin_frontend() {
     nohup npm run dev > "$LOG_DIR/admin-frontend.log" 2>&1 &
     echo $! > "$LOG_DIR/admin-frontend.pid"
 
-    sleep 3
-    if ss -tuln 2>/dev/null | grep -q ":5001"; then
+    sleep 5
+    if ss -tuln 2>/dev/null | grep -q ":5001[[:space:]]"; then
         echo "  ✅ 管理后台前端启动成功"
     else
         echo "  ❌ 管理后台前端启动失败，查看日志: tail -f $LOG_DIR/admin-frontend.log"

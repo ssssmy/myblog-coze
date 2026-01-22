@@ -33,8 +33,8 @@ if not exist "node_modules" (
 start /B "" cmd /c "npm start > \"%LOG_DIR%\master-backend.log\" 2>&1"
 
 REM 等待服务启动
-timeout /t 3 >nul
-netstat -ano | findstr ":3001" >nul
+timeout /t 5 >nul
+netstat -ano | findstr ":3001 " >nul
 if %errorlevel% equ 0 (
     echo   ✅ 主项目后端启动成功
 ) else (
@@ -59,8 +59,8 @@ if not exist "node_modules" (
 start /B "" cmd /c "pnpm dev > \"%LOG_DIR%\master-frontend.log\" 2>&1"
 
 REM 等待服务启动
-timeout /t 3 >nul
-netstat -ano | findstr ":5000" >nul
+timeout /t 5 >nul
+netstat -ano | findstr ":5000 " >nul
 if %errorlevel% equ 0 (
     echo   ✅ 主项目前端启动成功
 ) else (

@@ -31,8 +31,8 @@ start_master_backend() {
     nohup npm start > "$LOG_DIR/master-backend.log" 2>&1 &
     echo $! > "$LOG_DIR/master-backend.pid"
 
-    sleep 3
-    if ss -tuln 2>/dev/null | grep -q ":3001"; then
+    sleep 5
+    if ss -tuln 2>/dev/null | grep -q ":3001[[:space:]]"; then
         echo "  ✅ 主项目后端启动成功"
     else
         echo "  ❌ 主项目后端启动失败，查看日志: tail -f $LOG_DIR/master-backend.log"
@@ -55,8 +55,8 @@ start_master_frontend() {
     nohup pnpm dev > "$LOG_DIR/master-frontend.log" 2>&1 &
     echo $! > "$LOG_DIR/master-frontend.pid"
 
-    sleep 3
-    if ss -tuln 2>/dev/null | grep -q ":5000"; then
+    sleep 5
+    if ss -tuln 2>/dev/null | grep -q ":5000[[:space:]]"; then
         echo "  ✅ 主项目前端启动成功"
     else
         echo "  ❌ 主项目前端启动失败，查看日志: tail -f $LOG_DIR/master-frontend.log"
