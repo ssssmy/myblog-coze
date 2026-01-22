@@ -14,6 +14,11 @@ REM 获取脚本所在目录
 set "SCRIPT_DIR=%~dp0"
 set "PROJECT_ROOT=%SCRIPT_DIR%.."
 
+REM 转换为绝对路径
+pushd "%PROJECT_ROOT%"
+set "PROJECT_ROOT=%CD%"
+popd
+
 REM 日志目录
 set "LOG_DIR=%PROJECT_ROOT%\logs"
 if not exist "%LOG_DIR%" mkdir "%LOG_DIR%"
@@ -30,18 +35,30 @@ if not exist "node_modules" (
 )
 
 echo   启动服务...
-start /min cmd /c "npm start > \"%LOG_DIR%\admin-backend.log\" 2>&1"
+start "Admin Backend" cmd /c "npm start > \"%LOG_DIR%\admin-backend.log\" 2>&1"
 
-REM 等待服务启动
+REM 等待服务启动并检查
 echo   等待服务启动...
-timeout /t 5 >nul 2>&1
+set /a retry=0
+:check_admin_backend
+timeout /t 2 >nul 2>&1
+set /a retry+=1
 netstat -ano | findstr ":3002 " >nul 2>&1
 if %errorlevel% equ 0 (
     echo   ✅ 管理后台后端启动成功
 ) else (
-    echo   ❌ 管理后台后端启动失败，查看日志: type %LOG_DIR%\admin-backend.log
-    pause
-    exit /b 1
+    if %retry% lss 5 (
+        echo   正在检测服务... (第 %retry% 次)
+        goto check_admin_backend
+    ) else (
+        echo   ❌ 管理后台后端启动失败
+        echo.
+        echo   查看日志:
+        type "%LOG_DIR%\admin-backend.log"
+        echo.
+        pause
+        exit /b 1
+    )
 )
 
 REM 启动管理后台前端
@@ -56,18 +73,30 @@ if not exist "node_modules" (
 )
 
 echo   启动服务...
-start /min cmd /c "npm run dev > \"%LOG_DIR%\admin-frontend.log\" 2>&1"
+start "Admin Frontend" cmd /c "npm run dev > \"%LOG_DIR%\admin-frontend.log\" 2>&1"
 
-REM 等待服务启动
+REM 等待服务启动并检查
 echo   等待服务启动...
-timeout /t 5 >nul 2>&1
+set /a retry=0
+:check_admin_frontend
+timeout /t 2 >nul 2>&1
+set /a retry+=1
 netstat -ano | findstr ":5001 " >nul 2>&1
 if %errorlevel% equ 0 (
     echo   ✅ 管理后台前端启动成功
 ) else (
-    echo   ❌ 管理后台前端启动失败，查看日志: type %LOG_DIR%\admin-frontend.log
-    pause
-    exit /b 1
+    if %retry% lss 5 (
+        echo   正在检测服务... (第 %retry% 次)
+        goto check_admin_frontend
+    ) else (
+        echo   ❌ 管理后台前端启动失败
+        echo.
+        echo   查看日志:
+        type "%LOG_DIR%\admin-frontend.log"
+        echo.
+        pause
+        exit /b 1
+    )
 )
 
 REM 显示服务状态
