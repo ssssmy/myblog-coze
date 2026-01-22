@@ -65,8 +65,22 @@
 
 ```
 .
+├── .npmrc                      # npm 配置文件（固定 Node 版本）
+├── .nvmrc                      # nvm 配置文件（Node 18.20.0）
+├── .gitignore                  # Git 忽略文件
+├── package.json                # 项目根配置
+├── README.md                   # 项目文档
+├── scripts/                    # 工具脚本
+│   ├── start-all.bat/sh        # 启动所有服务
+│   ├── start-master.bat/sh     # 启动主项目
+│   ├── start-admin.bat/sh      # 启动管理后台
+│   ├── stop-all.bat/sh         # 停止所有服务
+│   ├── check-ports.bat/sh      # 端口检查工具
+│   ├── check-env.bat/sh        # 环境检查工具
+│   └── TROUBLESHOOTING.md      # 故障排除指南
 ├── admin/                      # 管理后台
 │   ├── backend/                # 管理后台后端
+│   │   ├── .npmrc              # npm 配置
 │   │   ├── admin.db            # 管理后台数据库（用户数据）
 │   │   ├── middleware/         # 中间件
 │   │   │   └── auth.js         # JWT认证中间件
@@ -97,11 +111,13 @@
 │   └── README.md
 ├── master/                     # 主项目
 │   ├── backend/                # 主项目后端
+│   │   ├── .npmrc              # npm 配置
 │   │   ├── server.js           # 服务器入口
 │   │   ├── package.json
 │   │   └── scripts/
 │   │       └── start.sh        # 启动脚本
 │   ├── frontend/               # 主项目前端
+│   │   ├── .npmrc              # npm 配置
 │   │   ├── src/
 │   │   │   ├── components/     # 组件
 │   │   │   │   ├── Header.vue  # 头部导航
@@ -126,9 +142,91 @@
 
 ### 环境要求
 
-- Node.js >= 18.0.0
-- pnpm >= 9.0.0（主项目）
-- npm >= 8.0.0（管理后台）
+**Node.js 版本要求**
+- 必须使用 Node.js >= 18.20.0
+- 推荐使用 Node.js 18.20.0 或更高版本
+- 项目已配置 .npmrc 文件强制检查 Node 版本
+
+**包管理器**
+- 主项目前端: pnpm >= 9.0.0
+- 其他项目: npm >= 8.0.0
+
+**检查 Node 版本**
+```bash
+node --version
+# 输出应 >= 18.20.0
+```
+
+如果 Node 版本不符合要求，请先升级 Node.js：
+- 访问 [Node.js 官网](https://nodejs.org/) 下载推荐版本
+- 或使用 [nvm](https://github.com/nvm-sh/nvm) 管理多个 Node 版本
+
+**环境检查工具**
+
+项目提供了环境检查脚本，可以快速验证开发环境是否符合要求：
+
+**Windows:**
+```cmd
+scripts\check-env.bat
+```
+
+**Linux/macOS:**
+```bash
+bash scripts/check-env.sh
+```
+
+该脚本会检查：
+- Node.js 版本（必须 >= 18.20.0）
+- npm 版本
+- pnpm 版本（建议 >= 9.0.0）
+
+### Node 版本管理
+
+项目使用多个方式来固定和管理 Node 版本：
+
+**1. .nvmrc 文件**
+```bash
+# 使用 nvm 的用户会自动切换到正确的版本
+cat .nvmrc  # 输出: 18.20.0
+```
+
+**2. .npmrc 文件**
+```
+engine-strict=true
+node-version=18.20.0
+```
+
+**3. package.json 中的 engines 字段**
+```json
+{
+  "engines": {
+    "node": ">=18.20.0"
+  }
+}
+```
+
+**使用 nvm 管理 Node 版本（推荐）**
+
+安装 nvm（如果尚未安装）：
+```bash
+# Linux/macOS
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+
+# Windows
+# 访问 https://github.com/coreybutler/nvm-windows/releases 下载安装
+```
+
+使用正确的 Node 版本：
+```bash
+# 安装指定版本
+nvm install 18.20.0
+
+# 切换到指定版本
+nvm use 18.20.0
+
+# 设置为默认版本
+nvm alias default 18.20.0
+```
 
 ### 使用启动脚本（推荐）
 

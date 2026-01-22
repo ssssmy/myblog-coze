@@ -1,0 +1,21 @@
+{
+  "name": "myblog-coze",
+  "version": "1.0.0",
+  "description": "基于 Vue 3 + Express.js 的现代化博客系统",
+  "private": true,
+  "engines": {
+    "node": ">=18.20.0"
+  },
+  "scripts": {
+    "start": "bash scripts/start-all.sh",
+    "stop": "bash scripts/stop-all.sh"
+  },
+  "keywords": [
+    "blog",
+    "vue3",
+    "express",
+    "typescript"
+  ],
+  "author": "",
+  "license": "ISC"
+}

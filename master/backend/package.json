@@ -12,6 +12,9 @@
     "api",
     "express"
   ],
+  "engines": {
+    "node": ">=18.20.0"
+  },
   "author": "",
   "license": "ISC",
   "dependencies": {
