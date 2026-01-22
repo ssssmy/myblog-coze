@@ -6,12 +6,14 @@
 .
 ├── admin/              # 管理后台
 │   ├── backend/        # 管理后台后端（Express.js + SQLite + JWT）
+│   │   ├── admin.db    # 管理后台数据库（用户数据）
+│   │   └── server.js
 │   └── frontend/       # 管理后台前端（Vue 3 + Element Plus + TypeScript）
 ├── master/             # 主项目
 │   ├── backend/        # 主项目后端（Express.js + SQLite）
+│   │   └── server.js
 │   └── frontend/       # 主项目前端（Vue 3 + Vite + TypeScript）
-├── blog.db             # 博客数据库（文章数据）
-└── admin.db            # 管理后台数据库（用户数据）
+└── blog.db             # 博客数据库（文章数据，主项目和管理后台共享）
 ```
 
 ## 快速开始
@@ -88,12 +90,12 @@ pnpm dev
 
 ## 数据库说明
 
-项目使用 SQLite 数据库，数据库文件位于根目录：
+项目使用 SQLite 数据库：
 
-- **blog.db**: 存储文章数据（posts 表），主项目和管理后台共享此数据库
-- **admin.db**: 存储用户数据（users 表），仅管理后台使用
+- **blog.db**（根目录）：存储文章数据（posts 表），主项目和管理后台共享此数据库
+- **admin.db**（admin/backend/）：存储用户数据（users 表），仅管理后台使用
 
-两个后端通过数据库附加（ATTACH DATABASE）的方式共享 blog.db 中的文章数据，确保数据一致性。
+管理后台后端通过数据库附加（ATTACH DATABASE）的方式共享根目录的 blog.db 中的文章数据，确保数据一致性。
 
 ### 数据库结构
 
