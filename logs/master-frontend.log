@@ -1,0 +1,12 @@
+
+> blog-frontend@1.0.0 dev /workspace/projects/master/frontend
+> bash ./scripts/dev.sh
+
+Clearing port 5000 before start.
+Port 5000 is free.
+Starting HTTP service on port 5000 for dev...
+
+  VITE v7.3.1  ready in 159 ms
+
+  ➜  Local:   http://localhost:5000/
+  ➜  Network: use --host to expose

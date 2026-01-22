@@ -1,0 +1,10 @@
+
+> blog-admin-backend@1.0.0 start
+> node server.js
+
+✅ 管理后台数据库连接成功
+✅ 连接博客数据库成功
+✅ users 表创建成功
+✅ 附加博客数据库成功
+🚀 管理后台后端服务运行在 http://localhost:3002
+✅ 默认管理员账号已创建 (admin/admin123)

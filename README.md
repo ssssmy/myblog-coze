@@ -128,7 +128,56 @@
 - pnpm >= 9.0.0（主项目）
 - npm >= 8.0.0（管理后台）
 
-### 主项目
+### 使用启动脚本（推荐）
+
+项目提供了自动化启动脚本，支持 Windows、Linux 和 macOS。
+
+#### Linux/macOS
+
+**启动所有服务**
+```bash
+bash scripts/start-all.sh
+# 或
+./scripts/start-all.sh
+```
+
+**仅启动主项目**
+```bash
+bash scripts/start-master.sh
+```
+
+**仅启动管理后台**
+```bash
+bash scripts/start-admin.sh
+```
+
+**停止所有服务**
+```bash
+bash scripts/stop-all.sh
+```
+
+#### Windows
+
+**启动所有服务**
+双击 `scripts\start-all.bat` 或在命令行中运行：
+```cmd
+scripts\start-all.bat
+```
+
+**仅启动主项目**
+双击 `scripts\start-master.bat`
+
+**仅启动管理后台**
+双击 `scripts\start-admin.bat`
+
+**停止所有服务**
+双击 `scripts\stop-all.bat`
+
+详细脚本说明请查看 [scripts/README.md](scripts/README.md)
+
+### 手动启动
+
+#### 主项目
 
 **1. 启动后端服务（端口 3001）**
 ```bash
