@@ -10,17 +10,10 @@ echo ======================================
 echo   博客系统 - 停止所有服务
 echo ======================================
 
-REM 获取脚本所在目录
-set "SCRIPT_DIR=%~dp0"
-set "PROJECT_ROOT=%SCRIPT_DIR%.."
-
-REM 日志目录
-set "LOG_DIR=%PROJECT_ROOT%\logs"
-
 REM 停止端口 3001 的服务
 echo.
 echo 🛑 停止主项目后端 (端口 3001)...
-netstat -ano | findstr ":3001 " >nul
+netstat -ano | findstr ":3001 " >nul 2>&1
 if %errorlevel% equ 0 (
     for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":3001 "') do (
         taskkill /F /PID %%a >nul 2>&1
@@ -35,7 +28,7 @@ if %errorlevel% equ 0 (
 REM 停止端口 3002 的服务
 echo.
 echo 🛑 停止管理后台后端 (端口 3002)...
-netstat -ano | findstr ":3002 " >nul
+netstat -ano | findstr ":3002 " >nul 2>&1
 if %errorlevel% equ 0 (
     for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":3002 "') do (
         taskkill /F /PID %%a >nul 2>&1
@@ -50,7 +43,7 @@ if %errorlevel% equ 0 (
 REM 停止端口 5000 的服务
 echo.
 echo 🛑 停止主项目前端 (端口 5000)...
-netstat -ano | findstr ":5000 " >nul
+netstat -ano | findstr ":5000 " >nul 2>&1
 if %errorlevel% equ 0 (
     for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":5000 "') do (
         taskkill /F /PID %%a >nul 2>&1
@@ -65,7 +58,7 @@ if %errorlevel% equ 0 (
 REM 停止端口 5001 的服务
 echo.
 echo 🛑 停止管理后台前端 (端口 5001)...
-netstat -ano | findstr ":5001 " >nul
+netstat -ano | findstr ":5001 " >nul 2>&1
 if %errorlevel% equ 0 (
     for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":5001 "') do (
         taskkill /F /PID %%a >nul 2>&1

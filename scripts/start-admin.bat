@@ -29,12 +29,13 @@ if not exist "node_modules" (
     call npm install
 )
 
-start /B "" cmd /c "npm start > \"%LOG_DIR%\admin-backend.log\" 2>&1"
+echo   启动服务...
+start /min cmd /c "npm start > \"%LOG_DIR%\admin-backend.log\" 2>&1"
 
 REM 等待服务启动
 echo   等待服务启动...
-timeout /t 5 >nul
-netstat -ano | findstr ":3002 " >nul
+timeout /t 5 >nul 2>&1
+netstat -ano | findstr ":3002 " >nul 2>&1
 if %errorlevel% equ 0 (
     echo   ✅ 管理后台后端启动成功
 ) else (
@@ -54,12 +55,13 @@ if not exist "node_modules" (
     call npm install
 )
 
-start /B "" cmd /c "npm run dev > \"%LOG_DIR%\admin-frontend.log\" 2>&1"
+echo   启动服务...
+start /min cmd /c "npm run dev > \"%LOG_DIR%\admin-frontend.log\" 2>&1"
 
 REM 等待服务启动
 echo   等待服务启动...
-timeout /t 5 >nul
-netstat -ano | findstr ":5001 " >nul
+timeout /t 5 >nul 2>&1
+netstat -ano | findstr ":5001 " >nul 2>&1
 if %errorlevel% equ 0 (
     echo   ✅ 管理后台前端启动成功
 ) else (
