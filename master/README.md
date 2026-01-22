@@ -12,10 +12,11 @@ master/
 │   └── vite.config.ts
 └── backend/           # 后端服务（Express.js + SQLite）
     ├── server.js
-    ├── blog.db
     ├── package.json
     └── scripts/
 ```
+
+**注意**: 数据库文件（blog.db）已移至项目根目录，与 admin 项目共享。
 
 ## 快速开始
 

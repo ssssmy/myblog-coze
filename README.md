@@ -7,9 +7,11 @@
 ├── admin/              # 管理后台
 │   ├── backend/        # 管理后台后端（Express.js + SQLite + JWT）
 │   └── frontend/       # 管理后台前端（Vue 3 + Element Plus + TypeScript）
-└── master/             # 主项目
-    ├── backend/        # 主项目后端（Express.js + SQLite）
-    └── frontend/       # 主项目前端（Vue 3 + Vite + TypeScript）
+├── master/             # 主项目
+│   ├── backend/        # 主项目后端（Express.js + SQLite）
+│   └── frontend/       # 主项目前端（Vue 3 + Vite + TypeScript）
+├── blog.db             # 博客数据库（文章数据）
+└── admin.db            # 管理后台数据库（用户数据）
 ```
 
 ## 快速开始
@@ -83,6 +85,40 @@ pnpm dev
 | 主项目后端 | 3001 |
 | 管理后台前端 | 5001 |
 | 管理后台后端 | 3002 |
+
+## 数据库说明
+
+项目使用 SQLite 数据库，数据库文件位于根目录：
+
+- **blog.db**: 存储文章数据（posts 表），主项目和管理后台共享此数据库
+- **admin.db**: 存储用户数据（users 表），仅管理后台使用
+
+两个后端通过数据库附加（ATTACH DATABASE）的方式共享 blog.db 中的文章数据，确保数据一致性。
+
+### 数据库结构
+
+**blog.db - posts 表**
+```sql
+CREATE TABLE posts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL,
+  excerpt TEXT NOT NULL,
+  category TEXT NOT NULL,
+  date TEXT NOT NULL,
+  content TEXT NOT NULL
+)
+```
+
+**admin.db - users 表**
+```sql
+CREATE TABLE users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  username TEXT UNIQUE NOT NULL,
+  password TEXT NOT NULL,
+  email TEXT UNIQUE NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+)
+```
 
 ## 开发规范
 

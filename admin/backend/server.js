@@ -12,7 +12,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // SQLite 数据库连接
-const dbPath = path.join(__dirname, 'admin.db');
+const dbPath = path.join(__dirname, '../../admin.db');
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
     console.error('数据库连接失败:', err.message);

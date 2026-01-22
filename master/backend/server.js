@@ -11,7 +11,7 @@ app.use(cors());
 app.use(express.json());
 
 // SQLite 数据库连接
-const dbPath = path.join(__dirname, 'blog.db');
+const dbPath = path.join(__dirname, '../../blog.db');
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
     console.error('数据库连接失败:', err.message);
