@@ -31,11 +31,11 @@ cd /d "%PROJECT_ROOT%\admin\backend"
 REM 检查依赖
 if not exist "node_modules" (
     echo   安装依赖...
-    call npm install
+    call pnpm install
 )
 
 echo   启动服务...
-start "Admin Backend" cmd /c "npm start > \"%LOG_DIR%\admin-backend.log\" 2>&1"
+start /min "AdminBackend" cmd /c "node server.js > \"%LOG_DIR%\admin-backend.log\" 2>&1"
 
 REM 等待服务启动并检查
 echo   等待服务启动...
@@ -47,8 +47,8 @@ netstat -ano | findstr ":3002 " >nul 2>&1
 if %errorlevel% equ 0 (
     echo   ✅ 管理后台后端启动成功
 ) else (
-    if %retry% lss 5 (
-        echo   正在检测服务... (第 %retry% 次)
+    if !retry! lss 5 (
+        echo   正在检测服务... ^(第 !retry! 次^)
         goto check_admin_backend
     ) else (
         echo   ❌ 管理后台后端启动失败
@@ -69,11 +69,11 @@ cd /d "%PROJECT_ROOT%\admin\frontend"
 REM 检查依赖
 if not exist "node_modules" (
     echo   安装依赖...
-    call npm install
+    call pnpm install
 )
 
 echo   启动服务...
-start "Admin Frontend" cmd /c "npm run dev > \"%LOG_DIR%\admin-frontend.log\" 2>&1"
+start /min "AdminFrontend" cmd /c "pnpm dev --port 5001 > \"%LOG_DIR%\admin-frontend.log\" 2>&1"
 
 REM 等待服务启动并检查
 echo   等待服务启动...
@@ -85,8 +85,8 @@ netstat -ano | findstr ":5001 " >nul 2>&1
 if %errorlevel% equ 0 (
     echo   ✅ 管理后台前端启动成功
 ) else (
-    if %retry% lss 5 (
-        echo   正在检测服务... (第 %retry% 次)
+    if !retry! lss 5 (
+        echo   正在检测服务... ^(第 !retry! 次^)
         goto check_admin_frontend
     ) else (
         echo   ❌ 管理后台前端启动失败

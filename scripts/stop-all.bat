@@ -18,7 +18,7 @@ if %errorlevel% equ 0 (
     for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":3001 "') do (
         taskkill /F /PID %%a >nul 2>&1
         if !errorlevel! equ 0 (
-            echo   ✅ 主项目后端已停止 (PID: %%a)
+            echo   ✅ 主项目后端已停止 ^(PID: %%a^)
         )
     )
 ) else (
@@ -33,7 +33,7 @@ if %errorlevel% equ 0 (
     for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":3002 "') do (
         taskkill /F /PID %%a >nul 2>&1
         if !errorlevel! equ 0 (
-            echo   ✅ 管理后台后端已停止 (PID: %%a)
+            echo   ✅ 管理后台后端已停止 ^(PID: %%a^)
         )
     )
 ) else (
@@ -48,7 +48,7 @@ if %errorlevel% equ 0 (
     for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":5000 "') do (
         taskkill /F /PID %%a >nul 2>&1
         if !errorlevel! equ 0 (
-            echo   ✅ 主项目前端已停止 (PID: %%a)
+            echo   ✅ 主项目前端已停止 ^(PID: %%a^)
         )
     )
 ) else (
@@ -63,7 +63,7 @@ if %errorlevel% equ 0 (
     for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":5001 "') do (
         taskkill /F /PID %%a >nul 2>&1
         if !errorlevel! equ 0 (
-            echo   ✅ 管理后台前端已停止 (PID: %%a)
+            echo   ✅ 管理后台前端已停止 ^(PID: %%a^)
         )
     )
 ) else (

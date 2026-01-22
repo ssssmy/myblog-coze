@@ -31,11 +31,11 @@ cd /d "%PROJECT_ROOT%\master\backend"
 REM 检查依赖
 if not exist "node_modules" (
     echo   安装依赖...
-    call npm install
+    call pnpm install
 )
 
 echo   启动服务...
-start "Master Backend" cmd /c "npm start > \"%LOG_DIR%\master-backend.log\" 2>&1"
+start /min "MasterBackend" cmd /c "node server.js > \"%LOG_DIR%\master-backend.log\" 2>&1"
 
 REM 等待服务启动并检查
 echo   等待服务启动...
@@ -47,8 +47,8 @@ netstat -ano | findstr ":3001 " >nul 2>&1
 if %errorlevel% equ 0 (
     echo   ✅ 主项目后端启动成功
 ) else (
-    if %retry% lss 5 (
-        echo   正在检测服务... (第 %retry% 次)
+    if !retry! lss 5 (
+        echo   正在检测服务... ^(第 !retry! 次^)
         goto check_master_backend
     ) else (
         echo   ❌ 主项目后端启动失败
@@ -73,7 +73,7 @@ if not exist "node_modules" (
 )
 
 echo   启动服务...
-start "Master Frontend" cmd /c "pnpm dev > \"%LOG_DIR%\master-frontend.log\" 2>&1"
+start /min "MasterFrontend" cmd /c "pnpm dev > \"%LOG_DIR%\master-frontend.log\" 2>&1"
 
 REM 等待服务启动并检查
 echo   等待服务启动...
@@ -85,8 +85,8 @@ netstat -ano | findstr ":5000 " >nul 2>&1
 if %errorlevel% equ 0 (
     echo   ✅ 主项目前端启动成功
 ) else (
-    if %retry% lss 5 (
-        echo   正在检测服务... (第 %retry% 次)
+    if !retry! lss 5 (
+        echo   正在检测服务... ^(第 !retry! 次^)
         goto check_master_frontend
     ) else (
         echo   ❌ 主项目前端启动失败
