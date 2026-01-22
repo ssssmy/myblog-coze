@@ -1,0 +1,17 @@
+[project]
+entrypoint = "frontend/index.html"
+requires = ["nodejs-24"]
+
+[dev]
+build = [
+  ["pnpm", "install", "--dir", "frontend"],
+  ["npm", "install", "--prefix", "backend"]
+]
+run = ["bash", "-c", "cd frontend && pnpm dev"]
+
+[deploy]
+build = [
+  ["bash", "-c", "cd frontend && pnpm install && pnpm run build"],
+  ["bash", "-c", "cd backend && npm install"]
+]
+run = ["bash", "-c", "cd frontend && pnpm run start"]
