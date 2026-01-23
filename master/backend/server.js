@@ -72,6 +72,7 @@ function saveDatabase() {
 // 插入示例数据
 function insertSampleData() {
   const stmt = db.prepare(`INSERT INTO posts (title, excerpt, category, date, content) VALUES (?, ?, ?, ?, ?)`);
+
   stmt.run([
     'Vue 3 Composition API 深入理解',
     'Vue 3 的 Composition API 为我们提供了更灵活的代码组织方式。本文将深入探讨其核心概念、使用场景以及最佳实践。',
@@ -345,23 +346,15 @@ app.get('/api/posts', (req, res) => {
     let params = [];
 
     if (category) {
-      query = 'SELECT * FROM posts WHERE category = :category ORDER BY date DESC';
-      params = { ':category': category };
+      query = 'SELECT * FROM posts WHERE category = ? ORDER BY date DESC';
+      params = [category];
     }
 
     const stmt = db.prepare(query);
     const result = stmt.all(params);
     stmt.free();
 
-    // 转换结果格式
-    const columns = ['id', 'title', 'excerpt', 'category', 'date', 'content'];
-    const posts = result.map(row => {
-      const obj = {};
-      columns.forEach((col, i) => obj[col] = row[i]);
-      return obj;
-    });
-
-    res.json(posts);
+    res.json(result);
   } catch (err) {
     console.error('获取文章失败:', err);
     res.status(500).json({ error: '获取文章失败' });
@@ -373,25 +366,18 @@ app.get('/api/posts/titles', (req, res) => {
   try {
     const { category } = req.query;
     let query = 'SELECT id, title, excerpt, category, date FROM posts ORDER BY date DESC';
-    let params = {};
+    let params = [];
 
     if (category) {
-      query = 'SELECT id, title, excerpt, category, date FROM posts WHERE category = :category ORDER BY date DESC';
-      params = { ':category': category };
+      query = 'SELECT id, title, excerpt, category, date FROM posts WHERE category = ? ORDER BY date DESC';
+      params = [category];
     }
 
     const stmt = db.prepare(query);
     const result = stmt.all(params);
     stmt.free();
 
-    const columns = ['id', 'title', 'excerpt', 'category', 'date'];
-    const posts = result.map(row => {
-      const obj = {};
-      columns.forEach((col, i) => obj[col] = row[i]);
-      return obj;
-    });
-
-    res.json(posts);
+    res.json(result);
   } catch (err) {
     console.error('获取文章失败:', err);
     res.status(500).json({ error: '获取文章失败' });
@@ -402,19 +388,15 @@ app.get('/api/posts/titles', (req, res) => {
 app.get('/api/posts/:id', (req, res) => {
   try {
     const { id } = req.params;
-    const stmt = db.prepare('SELECT * FROM posts WHERE id = :id');
-    const result = stmt.all({ ':id': id });
+    const stmt = db.prepare('SELECT * FROM posts WHERE id = ?');
+    const result = stmt.get([id]);
     stmt.free();
 
-    if (result.length === 0) {
+    if (!result) {
       return res.status(404).json({ error: '文章不存在' });
     }
 
-    const columns = ['id', 'title', 'excerpt', 'category', 'date', 'content'];
-    const post = {};
-    columns.forEach((col, i) => post[col] = result[0][i]);
-
-    res.json(post);
+    res.json(result);
   } catch (err) {
     console.error('获取文章详情失败:', err);
     res.status(500).json({ error: '获取文章详情失败' });
@@ -430,19 +412,12 @@ app.get('/api/search', (req, res) => {
     }
 
     const stmt = db.prepare(
-      'SELECT id, title, excerpt, category, date FROM posts WHERE title LIKE :q OR content LIKE :q ORDER BY date DESC'
+      'SELECT id, title, excerpt, category, date FROM posts WHERE title LIKE ? OR content LIKE ? ORDER BY date DESC'
     );
-    const result = stmt.all({ ':q': `%${q}%` });
+    const result = stmt.all([`%${q}%`, `%${q}%`]);
     stmt.free();
 
-    const columns = ['id', 'title', 'excerpt', 'category', 'date'];
-    const posts = result.map(row => {
-      const obj = {};
-      columns.forEach((col, i) => obj[col] = row[i]);
-      return obj;
-    });
-
-    res.json(posts);
+    res.json(result);
   } catch (err) {
     console.error('搜索失败:', err);
     res.status(500).json({ error: '搜索失败' });

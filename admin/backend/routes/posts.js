@@ -5,6 +5,8 @@ const { authenticateToken } = require('../middleware/auth');
 const path = require('path');
 const fs = require('fs');
 
+module.exports = router;
+
 // 获取所有文章（包括已删除的）
 router.get('/list', authenticateToken, (req, res) => {
   const { page = 1, pageSize = 10, keyword = '', category = '' } = req.query;
@@ -13,49 +15,37 @@ router.get('/list', authenticateToken, (req, res) => {
   try {
     const blogDb = req.blogDb;
     let query = 'SELECT * FROM posts WHERE 1=1';
-    let params = {};
+    let params = [];
 
     if (keyword) {
-      query += ' AND (title LIKE :keyword OR content LIKE :keyword)';
-      params = { ':keyword': `%${keyword}%` };
+      query += ' AND (title LIKE ? OR content LIKE ?)';
+      params.push(`%${keyword}%`, `%${keyword}%`);
     }
 
     if (category) {
-      query += ' AND category = :category';
-      params = { ':category': category, ...params };
+      query += ' AND category = ?';
+      params.push(category);
     }
 
     // 先获取总数
     const countQuery = query.replace('SELECT *', 'SELECT COUNT(*) as total');
     const countStmt = blogDb.prepare(countQuery);
-    const countResult = countStmt.all(params);
+    const countResult = countStmt.get(params);
     countStmt.free();
 
     // 获取数据
-    query += ' ORDER BY id DESC LIMIT :pageSize OFFSET :offset';
-    const finalParams = {
-      ...params,
-      ':pageSize': parseInt(pageSize),
-      ':offset': offset
-    };
+    query += ' ORDER BY id DESC LIMIT ? OFFSET ?';
+    params.push(parseInt(pageSize), offset);
 
     const stmt = blogDb.prepare(query);
-    const result = stmt.all(finalParams);
+    const result = stmt.all(params);
     stmt.free();
-
-    // 转换结果格式
-    const columns = ['id', 'title', 'excerpt', 'category', 'date', 'content'];
-    const rows = result.map(row => {
-      const obj = {};
-      columns.forEach((col, i) => obj[col] = row[i]);
-      return obj;
-    });
 
     res.json({
       success: true,
       data: {
-        list: rows,
-        total: countResult[0][0],
+        list: result,
+        total: countResult.total,
         page: parseInt(page),
         pageSize: parseInt(pageSize)
       }
@@ -70,19 +60,15 @@ router.get('/list', authenticateToken, (req, res) => {
 router.get('/:id', authenticateToken, (req, res) => {
   try {
     const blogDb = req.blogDb;
-    const stmt = blogDb.prepare('SELECT * FROM posts WHERE id = :id');
-    const result = stmt.all({ ':id': req.params.id });
+    const stmt = blogDb.prepare('SELECT * FROM posts WHERE id = ?');
+    const result = stmt.get([req.params.id]);
     stmt.free();
 
-    if (result.length === 0) {
+    if (!result) {
       return res.status(404).json({ success: false, message: '文章不存在' });
     }
 
-    const columns = ['id', 'title', 'excerpt', 'category', 'date', 'content'];
-    const row = {};
-    columns.forEach((col, i) => row[col] = result[0][i]);
-
-    res.json({ success: true, data: row });
+    res.json({ success: true, data: result });
   } catch (err) {
     console.error('查询文章详情错误:', err);
     res.status(500).json({ success: false, message: '查询失败' });
@@ -100,15 +86,15 @@ router.post('/', authenticateToken, (req, res) => {
   try {
     const blogDb = req.blogDb;
     const stmt = blogDb.prepare(
-      `INSERT INTO posts (title, excerpt, category, date, content) VALUES (:title, :excerpt, :category, :date, :content)`
+      `INSERT INTO posts (title, excerpt, category, date, content) VALUES (?, ?, ?, ?, ?)`
     );
-    stmt.run({
-      ':title': title,
-      ':excerpt': excerpt || content.substring(0, 200),
-      ':category': category,
-      ':date': date || new Date().toISOString().split('T')[0],
-      ':content': content
-    });
+    const info = stmt.run([
+      title,
+      excerpt || content.substring(0, 200),
+      category,
+      date || new Date().toISOString().split('T')[0],
+      content
+    ]);
     stmt.free();
 
     // 保存数据库
@@ -116,7 +102,7 @@ router.post('/', authenticateToken, (req, res) => {
     const data = blogDb.export();
     fs.writeFileSync(blogDbPath, Buffer.from(data));
 
-    res.json({ success: true, data: { id: blogDb.exec('SELECT last_insert_rowid() as id')[0].values[0][0] } });
+    res.json({ success: true, data: { id: info.lastInsertRowid } });
   } catch (err) {
     console.error('创建文章错误:', err);
     res.status(500).json({ success: false, message: '创建失败' });
@@ -134,16 +120,16 @@ router.put('/:id', authenticateToken, (req, res) => {
   try {
     const blogDb = req.blogDb;
     const stmt = blogDb.prepare(
-      `UPDATE posts SET title = :title, excerpt = :excerpt, category = :category, date = :date, content = :content WHERE id = :id`
+      `UPDATE posts SET title = ?, excerpt = ?, category = ?, date = ?, content = ? WHERE id = ?`
     );
-    stmt.run({
-      ':title': title,
-      ':excerpt': excerpt || content.substring(0, 200),
-      ':category': category,
-      ':date': date || new Date().toISOString().split('T')[0],
-      ':content': content,
-      ':id': req.params.id
-    });
+    stmt.run([
+      title,
+      excerpt || content.substring(0, 200),
+      category,
+      date || new Date().toISOString().split('T')[0],
+      content,
+      req.params.id
+    ]);
     stmt.free();
 
     // 保存数据库
@@ -162,8 +148,8 @@ router.put('/:id', authenticateToken, (req, res) => {
 router.delete('/:id', authenticateToken, (req, res) => {
   try {
     const blogDb = req.blogDb;
-    const stmt = blogDb.prepare('DELETE FROM posts WHERE id = :id');
-    stmt.run({ ':id': req.params.id });
+    const stmt = blogDb.prepare('DELETE FROM posts WHERE id = ?');
+    stmt.run([req.params.id]);
     stmt.free();
 
     // 保存数据库
@@ -188,11 +174,11 @@ router.post('/batch-delete', authenticateToken, (req, res) => {
 
   try {
     const blogDb = req.blogDb;
-    const stmt = blogDb.prepare('DELETE FROM posts WHERE id = :id');
+    const stmt = blogDb.prepare('DELETE FROM posts WHERE id = ?');
     let deletedCount = 0;
 
     for (const id of ids) {
-      stmt.run({ ':id': id });
+      stmt.run([id]);
       deletedCount++;
     }
     stmt.free();
@@ -219,7 +205,7 @@ router.get('/export/excel', authenticateToken, (req, res) => {
       return res.status(500).json({ success: false, message: '导出失败' });
     }
 
-    const columns = ['ID', '标题', '摘要', '分类', '日期'];
+    const columns = result[0].columns;
     const data = result[0].values.map(row => ({
       'ID': row[0],
       '标题': row[1],
@@ -270,5 +256,3 @@ router.get('/categories/all', authenticateToken, (req, res) => {
     res.status(500).json({ success: false, message: '查询失败' });
   }
 });
-
-module.exports = router;

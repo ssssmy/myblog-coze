@@ -18,19 +18,19 @@ router.post('/login', (req, res) => {
 
   try {
     const adminDb = req.adminDb;
-    const stmt = adminDb.prepare('SELECT * FROM users WHERE username = :username');
-    const result = stmt.all({ ':username': username });
+    const stmt = adminDb.prepare('SELECT * FROM users WHERE username = ?');
+    const result = stmt.get([username]);
     stmt.free();
 
-    if (result.length === 0) {
+    if (!result) {
       return res.status(401).json({ success: false, message: '用户名或密码错误' });
     }
 
     const user = {
-      id: result[0][0],
-      username: result[0][1],
-      password: result[0][2],
-      email: result[0][3]
+      id: result.id,
+      username: result.username,
+      password: result.password,
+      email: result.email
     };
 
     // 验证密码
@@ -74,17 +74,17 @@ router.post('/change-password', (req, res) => {
 
   try {
     const adminDb = req.adminDb;
-    const stmt = adminDb.prepare('SELECT * FROM users WHERE username = :username');
-    const result = stmt.all({ ':username': username });
+    const stmt = adminDb.prepare('SELECT * FROM users WHERE username = ?');
+    const result = stmt.get([username]);
     stmt.free();
 
-    if (result.length === 0) {
+    if (!result) {
       return res.status(404).json({ success: false, message: '用户不存在' });
     }
 
     const user = {
-      id: result[0][0],
-      password: result[0][2]
+      id: result.id,
+      password: result.password
     };
 
     const isValid = bcrypt.compareSync(oldPassword, user.password);
@@ -94,8 +94,8 @@ router.post('/change-password', (req, res) => {
     }
 
     const hashedPassword = bcrypt.hashSync(newPassword, 10);
-    const updateStmt = adminDb.prepare('UPDATE users SET password = :password WHERE id = :id');
-    updateStmt.run({ ':password': hashedPassword, ':id': user.id });
+    const updateStmt = adminDb.prepare('UPDATE users SET password = ? WHERE id = ?');
+    updateStmt.run([hashedPassword, user.id]);
     updateStmt.free();
 
     // 保存数据库
@@ -109,5 +109,3 @@ router.post('/change-password', (req, res) => {
     return res.status(500).json({ success: false, message: '修改失败' });
   }
 });
-
-module.exports = router;
