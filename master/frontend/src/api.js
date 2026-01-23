@@ -13,11 +13,11 @@ async function apiRequest(endpoint, options = {}) {
     });
 
     const data = await response.json();
-    
+
     if (!response.ok) {
       throw new Error(data.message || '请求失败');
     }
-    
+
     return data;
   } catch (error) {
     console.error('API 请求错误:', error);
@@ -30,9 +30,9 @@ export async function getAllPosts() {
   return apiRequest('/posts');
 }
 
-// 根据分类获取文章
+// 根据分类获取文章（使用查询参数）
 export async function getPostsByCategory(category) {
-  return apiRequest(`/posts/category/${encodeURIComponent(category)}`);
+  return apiRequest(`/posts?category=${encodeURIComponent(category)}`);
 }
 
 // 获取文章详情
