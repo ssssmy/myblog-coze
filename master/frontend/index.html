@@ -1677,7 +1677,7 @@
         updateActiveCategory(category);
         
         try {
-          const data = await apiRequest(`/posts/category/${encodeURIComponent(category)}`);
+          const data = await apiRequest(`/posts?category=${encodeURIComponent(category)}`);
           const posts = data.data;
           
           if (posts.length === 0) {
