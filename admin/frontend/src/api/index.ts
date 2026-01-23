@@ -12,42 +12,42 @@ export const changePassword = (data: { username: string; oldPassword: string; ne
 
 // 获取文章列表
 export const getPostList = (params: any) => {
-  return request.get('/posts/list', { params })
+  return request.get('/admin/posts/list', { params })
 }
 
 // 获取文章详情
 export const getPostDetail = (id: number) => {
-  return request.get(`/posts/${id}`)
+  return request.get(`/admin/posts/${id}`)
 }
 
 // 创建文章
 export const createPost = (data: any) => {
-  return request.post('/posts', data)
+  return request.post('/admin/posts', data)
 }
 
 // 更新文章
 export const updatePost = (id: number, data: any) => {
-  return request.put(`/posts/${id}`, data)
+  return request.put(`/admin/posts/${id}`, data)
 }
 
 // 删除文章
 export const deletePost = (id: number) => {
-  return request.delete(`/posts/${id}`)
+  return request.delete(`/admin/posts/${id}`)
 }
 
 // 批量删除文章
 export const batchDeletePosts = (ids: number[]) => {
-  return request.post('/posts/batch-delete', { ids })
+  return request.post('/admin/posts/batch-delete', { ids })
 }
 
 // 导出文章
 export const exportPosts = () => {
-  return request.get('/posts/export/excel', { responseType: 'blob' })
+  return request.get('/admin/posts/export/excel', { responseType: 'blob' })
 }
 
 // 获取所有分类
 export const getCategories = () => {
-  return request.get('/posts/categories/all')
+  return request.get('/admin/posts/categories/all')
 }
 
 // 获取个人信息

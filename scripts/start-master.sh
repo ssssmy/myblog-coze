@@ -73,11 +73,13 @@ show_status() {
     echo ""
     echo "📊 访问地址："
     echo "  主项目前台:     http://localhost:5000"
-    echo "  主项目后端API:  http://localhost:3001"
+    echo "  后端API:        http://localhost:3001"
+    echo ""
+    echo "ℹ️  说明：此后端同时支持主项目和管理后台"
     echo ""
     echo "📝 日志文件："
-    echo "  主项目后端:     $LOG_DIR/master-backend.log"
-    echo "  主项目前端:     $LOG_DIR/master-frontend.log"
+    echo "  后端:           $LOG_DIR/master-backend.log"
+    echo "  前端:           $LOG_DIR/master-frontend.log"
     echo ""
 }
 

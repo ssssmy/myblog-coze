@@ -1,17 +1,10 @@
+npm warn Unknown project config "enable-pre-post-scripts". This will stop working in the next major version of npm.
 
 > blog-backend@1.0.0 start
 > node server.js
 
-✅ 数据库连接成功
-✅ 数据表创建成功
+✅ 数据库连接成功（从文件加载）
+✅ users 表创建成功
+✅ posts 表创建成功
 ✅ 数据库已有 6 条记录
-🚀 服务器运行在 http://localhost:3001
-📝 API 端点:
-   GET  /api/health        - 健康检查
-   GET  /api/posts         - 获取所有文章
-   GET  /api/posts/:id     - 获取文章详情
-   GET  /api/posts/category/:category - 按分类获取文章
-   GET  /api/categories    - 获取所有分类
-   GET  /api/stats         - 获取统计信息
-   GET  /api/profile       - 获取个人信息
-Terminated
+🚀 博客后端服务运行在 http://localhost:3001

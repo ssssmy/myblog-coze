@@ -3,6 +3,7 @@ const cors = require('cors');
 const initSqlJs = require('sql.js');
 const path = require('path');
 const fs = require('fs');
+const bcrypt = require('bcryptjs');
 
 const app = express();
 const PORT = 3001;
@@ -10,6 +11,7 @@ const PORT = 3001;
 // 中间件
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 let db = null;
 let SQL = null;
@@ -49,7 +51,34 @@ async function initializeDatabase() {
       console.log('✅ 数据库创建成功');
     }
 
-    // 创建 posts 表
+    // 创建 users 表（管理后台用户表）
+    db.run(`CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT UNIQUE NOT NULL,
+      password TEXT NOT NULL,
+      email TEXT UNIQUE NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
+    console.log('✅ users 表创建成功');
+
+    // 创建默认管理员账号（用户名：admin，密码：admin123）
+    try {
+      const defaultPassword = bcrypt.hashSync('admin123', 10);
+      const stmt = db.prepare('SELECT * FROM users WHERE username = ?');
+      stmt.bind(['admin']);
+      const hasUser = stmt.step();
+      stmt.free();
+
+      if (!hasUser) {
+        db.run('INSERT INTO users (username, password, email) VALUES (?, ?, ?)',
+          ['admin', defaultPassword, 'admin@blog.com']);
+        console.log('✅ 默认管理员账号已创建 (admin/admin123)');
+      }
+    } catch (err) {
+      console.error('创建默认管理员失败:', err.message);
+    }
+
+    // 创建 posts 表（文章表）
     db.run(`CREATE TABLE IF NOT EXISTS posts (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL,
@@ -58,9 +87,9 @@ async function initializeDatabase() {
       date TEXT NOT NULL,
       content TEXT NOT NULL
     )`);
-    console.log('✅ 数据表创建成功');
+    console.log('✅ posts 表创建成功');
 
-    // 检查是否有数据，如果没有则插入示例数据
+    // 检查是否有示例数据，如果没有则插入
     const result = db.exec('SELECT COUNT(*) as count FROM posts');
     if (result.length === 0 || result[0].values[0][0] === 0) {
       insertSampleData();
@@ -342,7 +371,7 @@ type PartialUser = Partial<User>
   stmt.free();
 }
 
-// API 路由
+// ==================== 公开 API 路由（无需认证）====================
 
 // 获取所有分类
 app.get('/api/categories', (req, res) => {
@@ -369,11 +398,14 @@ app.get('/api/posts', (req, res) => {
     }
 
     const stmt = db.prepare(query);
-    const result = stmt.all(params);
-    const posts = rowsToObjectArray(stmt, result);
+    stmt.bind(params);
+    const result = [];
+    while (stmt.step()) {
+      result.push(stmt.getAsObject());
+    }
     stmt.free();
 
-    res.json(posts);
+    res.json(result);
   } catch (err) {
     console.error('获取文章失败:', err);
     res.status(500).json({ error: '获取文章失败' });
@@ -393,11 +425,14 @@ app.get('/api/posts/titles', (req, res) => {
     }
 
     const stmt = db.prepare(query);
-    const result = stmt.all(params);
-    const posts = rowsToObjectArray(stmt, result);
+    stmt.bind(params);
+    const result = [];
+    while (stmt.step()) {
+      result.push(stmt.getAsObject());
+    }
     stmt.free();
 
-    res.json(posts);
+    res.json(result);
   } catch (err) {
     console.error('获取文章失败:', err);
     res.status(500).json({ error: '获取文章失败' });
@@ -439,8 +474,11 @@ app.get('/api/search', (req, res) => {
     const stmt = db.prepare(
       'SELECT id, title, excerpt, category, date FROM posts WHERE title LIKE ? OR content LIKE ? ORDER BY date DESC'
     );
-    const result = stmt.all([`%${q}%`, `%${q}%`]);
-    const posts = rowsToObjectArray(stmt, result);
+    stmt.bind([`%${q}%`, `%${q}%`]);
+    const result = [];
+    while (stmt.step()) {
+      result.push(stmt.getAsObject());
+    }
     stmt.free();
 
     res.json(posts);
@@ -448,6 +486,424 @@ app.get('/api/search', (req, res) => {
     console.error('搜索失败:', err);
     res.status(500).json({ error: '搜索失败' });
   }
+});
+
+// ==================== 管理 API 路由（需要认证）====================
+
+// 用户登录
+app.post('/api/auth/login', (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).json({ success: false, message: '用户名和密码不能为空' });
+  }
+
+  try {
+    const stmt = db.prepare('SELECT * FROM users WHERE username = ?');
+    const result = stmt.get([username]);
+    stmt.free();
+
+    if (!result || result.length === 0) {
+      return res.status(401).json({ success: false, message: '用户名或密码错误' });
+    }
+
+    // 创建新的 stmt 来获取列名
+    const stmt2 = db.prepare('SELECT * FROM users WHERE username = ?');
+    const user = rowToObject(stmt2, result);
+    stmt2.free();
+
+    // 验证密码
+    const isValid = bcrypt.compareSync(password, user.password);
+
+    if (!isValid) {
+      return res.status(401).json({ success: false, message: '用户名或密码错误' });
+    }
+
+    // 生成 JWT token
+    const jwt = require('jsonwebtoken');
+    const { JWT_SECRET } = require('./middleware/auth');
+    const token = jwt.sign(
+      { id: user.id, username: user.username },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    res.json({
+      success: true,
+      data: {
+        token,
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email
+        }
+      }
+    });
+  } catch (err) {
+    console.error('登录错误:', err);
+    return res.status(500).json({ success: false, message: '数据库错误' });
+  }
+});
+
+// 修改密码
+app.post('/api/auth/change-password', (req, res) => {
+  const { username, oldPassword, newPassword } = req.body;
+
+  if (!username || !oldPassword || !newPassword) {
+    return res.status(400).json({ success: false, message: '参数不完整' });
+  }
+
+  try {
+    const stmt = db.prepare('SELECT * FROM users WHERE username = ?');
+    const result = stmt.get([username]);
+    stmt.free();
+
+    if (!result || result.length === 0) {
+      return res.status(404).json({ success: false, message: '用户不存在' });
+    }
+
+    // 创建新的 stmt 来获取列名
+    const stmt2 = db.prepare('SELECT * FROM users WHERE username = ?');
+    const user = rowToObject(stmt2, result);
+    stmt2.free();
+
+    const isValid = bcrypt.compareSync(oldPassword, user.password);
+
+    if (!isValid) {
+      return res.status(401).json({ success: false, message: '原密码错误' });
+    }
+
+    const hashedPassword = bcrypt.hashSync(newPassword, 10);
+    const updateStmt = db.prepare('UPDATE users SET password = ? WHERE id = ?');
+    updateStmt.run([hashedPassword, user.id]);
+    updateStmt.free();
+
+    // 保存数据库
+    saveDatabase();
+
+    res.json({ success: true, message: '密码修改成功' });
+  } catch (err) {
+    console.error('修改密码错误:', err);
+    return res.status(500).json({ success: false, message: '修改失败' });
+  }
+});
+
+// 认证中间件
+const authenticateToken = (req, res, next) => {
+  const jwt = require('jsonwebtoken');
+  const { JWT_SECRET } = require('./middleware/auth');
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ success: false, message: '未提供认证令牌' });
+  }
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) {
+      return res.status(403).json({ success: false, message: '令牌无效或已过期' });
+    }
+    req.user = user;
+    next();
+  });
+};
+
+// 获取文章列表（管理后台）
+app.get('/api/admin/posts/list', authenticateToken, (req, res) => {
+  const { page = 1, pageSize = 10, keyword = '', category = '' } = req.query;
+  const offset = (page - 1) * pageSize;
+
+  try {
+    if (!db) {
+      console.error('db is undefined!');
+      return res.status(500).json({ success: false, message: '数据库未初始化' });
+    }
+
+    let query = 'SELECT * FROM posts WHERE 1=1';
+    let params = [];
+
+    if (keyword) {
+      query += ' AND (title LIKE ? OR content LIKE ?)';
+      params.push(`%${keyword}%`, `%${keyword}%`);
+    }
+
+    if (category) {
+      query += ' AND category = ?';
+      params.push(category);
+    }
+
+    // 先获取总数
+    const countQuery = query.replace('SELECT *', 'SELECT COUNT(*) as total');
+    const countStmt = db.prepare(countQuery);
+    const countResult = countStmt.get(params);
+    const countObj = rowToObject(countStmt, countResult);
+    countStmt.free();
+
+    // 获取数据
+    query += ' ORDER BY id DESC LIMIT ? OFFSET ?';
+    params.push(parseInt(pageSize), offset);
+
+    const stmt = db.prepare(query);
+    stmt.bind(params);
+
+    const result = [];
+    while (stmt.step()) {
+      result.push(stmt.getAsObject());
+    }
+
+    stmt.free();
+
+    res.json({
+      success: true,
+      data: {
+        list: result,
+        total: countObj.total,
+        page: parseInt(page),
+        pageSize: parseInt(pageSize)
+      }
+    });
+  } catch (err) {
+    console.error('查询文章列表错误:', err);
+    res.status(500).json({ success: false, message: '查询失败' });
+  }
+});
+
+// 获取文章详情（管理后台）
+app.get('/api/admin/posts/:id', authenticateToken, (req, res) => {
+  try {
+    const { id } = req.params;
+    const stmt = db.prepare('SELECT * FROM posts WHERE id = ?');
+    const result = stmt.get([id]);
+    stmt.free();
+
+    if (!result || result.length === 0) {
+      return res.status(404).json({ success: false, message: '文章不存在' });
+    }
+
+    // 创建新的 stmt 来获取列名
+    const stmt2 = db.prepare('SELECT * FROM posts WHERE id = ?');
+    const post = rowToObject(stmt2, result);
+    stmt2.free();
+
+    res.json({ success: true, data: post });
+  } catch (err) {
+    console.error('查询文章详情错误:', err);
+    res.status(500).json({ success: false, message: '查询失败' });
+  }
+});
+
+// 创建文章
+app.post('/api/admin/posts', authenticateToken, (req, res) => {
+  const { title, excerpt, category, date, content } = req.body;
+
+  if (!title || !category || !content) {
+    return res.status(400).json({ success: false, message: '必填字段不能为空' });
+  }
+
+  try {
+    const stmt = db.prepare(
+      `INSERT INTO posts (title, excerpt, category, date, content) VALUES (?, ?, ?, ?, ?)`
+    );
+    const info = stmt.run([
+      title,
+      excerpt || content.substring(0, 200),
+      category,
+      date || new Date().toISOString().split('T')[0],
+      content
+    ]);
+    stmt.free();
+
+    // 保存数据库
+    saveDatabase();
+
+    res.json({ success: true, data: { id: info.lastInsertRowid } });
+  } catch (err) {
+    console.error('创建文章错误:', err);
+    res.status(500).json({ success: false, message: '创建失败' });
+  }
+});
+
+// 更新文章
+app.put('/api/admin/posts/:id', authenticateToken, (req, res) => {
+  const { title, excerpt, category, date, content } = req.body;
+
+  if (!title || !category || !content) {
+    return res.status(400).json({ success: false, message: '必填字段不能为空' });
+  }
+
+  try {
+    const stmt = db.prepare(
+      `UPDATE posts SET title = ?, excerpt = ?, category = ?, date = ?, content = ? WHERE id = ?`
+    );
+    stmt.run([
+      title,
+      excerpt || content.substring(0, 200),
+      category,
+      date || new Date().toISOString().split('T')[0],
+      content,
+      req.params.id
+    ]);
+    stmt.free();
+
+    // 保存数据库
+    saveDatabase();
+
+    res.json({ success: true, message: '更新成功' });
+  } catch (err) {
+    console.error('更新文章错误:', err);
+    res.status(500).json({ success: false, message: '更新失败' });
+  }
+});
+
+// 删除文章
+app.delete('/api/admin/posts/:id', authenticateToken, (req, res) => {
+  try {
+    const stmt = db.prepare('DELETE FROM posts WHERE id = ?');
+    stmt.run([req.params.id]);
+    stmt.free();
+
+    // 保存数据库
+    saveDatabase();
+
+    res.json({ success: true, message: '删除成功' });
+  } catch (err) {
+    console.error('删除文章错误:', err);
+    res.status(500).json({ success: false, message: '删除失败' });
+  }
+});
+
+// 批量删除文章
+app.post('/api/admin/posts/batch-delete', authenticateToken, (req, res) => {
+  const { ids } = req.body;
+
+  if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ success: false, message: '请选择要删除的文章' });
+  }
+
+  try {
+    const stmt = db.prepare('DELETE FROM posts WHERE id = ?');
+    let deletedCount = 0;
+
+    for (const id of ids) {
+      stmt.run([id]);
+      deletedCount++;
+    }
+    stmt.free();
+
+    // 保存数据库
+    saveDatabase();
+
+    res.json({ success: true, message: `成功删除 ${deletedCount} 篇文章` });
+  } catch (err) {
+    console.error('批量删除文章错误:', err);
+    res.status(500).json({ success: false, message: '批量删除失败' });
+  }
+});
+
+// 获取所有分类（管理后台）
+app.get('/api/admin/posts/categories/all', authenticateToken, (req, res) => {
+  try {
+    const result = db.exec('SELECT DISTINCT category FROM posts ORDER BY category');
+
+    if (result.length === 0) {
+      return res.json({
+        success: true,
+        data: []
+      });
+    }
+
+    res.json({
+      success: true,
+      data: result[0].values.map(row => row[0])
+    });
+  } catch (err) {
+    console.error('查询分类错误:', err);
+    res.status(500).json({ success: false, message: '查询失败' });
+  }
+});
+
+// 导出文章为 Excel
+app.get('/api/admin/posts/export/excel', authenticateToken, (req, res) => {
+  try {
+    const XLSX = require('xlsx');
+    const result = db.exec('SELECT id, title, excerpt, category, date FROM posts ORDER BY id DESC');
+
+    if (result.length === 0) {
+      return res.status(500).json({ success: false, message: '导出失败' });
+    }
+
+    const columns = result[0].columns;
+    const data = result[0].values.map(row => ({
+      'ID': row[0],
+      '标题': row[1],
+      '摘要': row[2],
+      '分类': row[3],
+      '日期': row[4]
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, '文章列表');
+
+    const filename = `文章列表_${new Date().toISOString().split('T')[0]}.xlsx`;
+    const filePath = `/tmp/${filename}`;
+
+    XLSX.writeFile(workbook, filePath);
+
+    res.download(filePath, filename, (err) => {
+      if (err) {
+        console.error('下载文件失败:', err);
+      }
+    });
+  } catch (err) {
+    console.error('导出文章错误:', err);
+    res.status(500).json({ success: false, message: '导出失败' });
+  }
+});
+
+// 获取个人信息
+app.get('/api/profile', authenticateToken, (req, res) => {
+  const profilePath = path.join(__dirname, '../../profile.json');
+
+  if (fs.existsSync(profilePath)) {
+    const data = fs.readFileSync(profilePath, 'utf8');
+    res.json({ success: true, data: JSON.parse(data) });
+  } else {
+    res.json({
+      success: true,
+      data: {
+        name: '博客主人',
+        role: '全栈开发者',
+        avatar: '👨‍💻',
+        social: {
+          github: '',
+          twitter: '',
+          email: ''
+        }
+      }
+    });
+  }
+});
+
+// 更新个人信息
+app.put('/api/profile', authenticateToken, (req, res) => {
+  const { name, role, avatar, social } = req.body;
+
+  const profileData = {
+    name: name || '博客主人',
+    role: role || '全栈开发者',
+    avatar: avatar || '👨‍💻',
+    social: social || {
+      github: '',
+      twitter: '',
+      email: ''
+    }
+  };
+
+  const profilePath = path.join(__dirname, '../../profile.json');
+  fs.writeFileSync(profilePath, JSON.stringify(profileData, null, 2));
+
+  res.json({ success: true, message: '个人信息更新成功' });
 });
 
 // 启动服务器

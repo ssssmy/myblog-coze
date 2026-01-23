@@ -28,8 +28,7 @@ check_port() {
     echo ""
 }
 
-check_port 3001 "主项目后端"
-check_port 3002 "管理后台后端"
+check_port 3001 "统一后端"
 check_port 5000 "主项目前端"
 check_port 5001 "管理后台前端"
 

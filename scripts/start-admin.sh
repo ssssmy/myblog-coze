@@ -16,30 +16,6 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 LOG_DIR="$PROJECT_ROOT/logs"
 mkdir -p "$LOG_DIR"
 
-# 启动管理后台后端
-start_admin_backend() {
-    echo ""
-    echo "🚀 启动管理后台后端 (端口 3002)..."
-    cd "$PROJECT_ROOT/admin/backend"
-
-    # 检查依赖
-    if [ ! -d "node_modules" ]; then
-        echo "  安装依赖..."
-        npm install
-    fi
-
-    nohup npm start > "$LOG_DIR/admin-backend.log" 2>&1 &
-    echo $! > "$LOG_DIR/admin-backend.pid"
-
-    sleep 5
-    if ss -tuln 2>/dev/null | grep -q ":3002[[:space:]]"; then
-        echo "  ✅ 管理后台后端启动成功"
-    else
-        echo "  ❌ 管理后台后端启动失败，查看日志: tail -f $LOG_DIR/admin-backend.log"
-        exit 1
-    fi
-}
-
 # 启动管理后台前端
 start_admin_frontend() {
     echo ""
@@ -73,22 +49,22 @@ show_status() {
     echo ""
     echo "📊 访问地址："
     echo "  管理后台:       http://localhost:5001"
-    echo "  管理后台API:    http://localhost:3002"
+    echo "  后端API:        http://localhost:3001"
     echo ""
     echo "🔐 默认账号："
     echo "  用户名: admin"
     echo "  密码: admin123"
     echo ""
     echo "📝 日志文件："
-    echo "  管理后台后端:   $LOG_DIR/admin-backend.log"
     echo "  管理后台前端:   $LOG_DIR/admin-frontend.log"
+    echo ""
+    echo "ℹ️  注意：确保主项目后端服务 (端口 3001) 已启动"
     echo ""
 }
 
 # 主流程
 cd "$PROJECT_ROOT"
 
-start_admin_backend
 start_admin_frontend
 
 show_status

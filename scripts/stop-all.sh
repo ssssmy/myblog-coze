@@ -56,7 +56,6 @@ stop_service() {
 
 # 停止所有服务
 stop_service "master-backend" 3001
-stop_service "admin-backend" 3002
 stop_service "master-frontend" 5000
 stop_service "admin-frontend" 5001
 
