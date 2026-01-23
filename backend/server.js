@@ -406,18 +406,26 @@ type PartialUser = Partial<User>
 // 获取所有分类
 app.get('/api/categories', (req, res) => {
   try {
-    const result = db.exec('SELECT DISTINCT category FROM posts ORDER BY category');
-    const categories = result.length > 0 ? result[0].values.map(row => row[0]) : [];
+    const stmt = db.prepare('SELECT id, name, description FROM categories ORDER BY name');
+    stmt.bind([]);
+
+    const result = [];
+    while (stmt.step()) {
+      result.push(stmt.getAsObject());
+    }
+    stmt.free();
 
     // 为每个分类添加文章数量统计
-    const categoriesWithCount = categories.map(category => {
-      const stmt = db.prepare('SELECT COUNT(*) as count FROM posts WHERE category = ?');
-      const countResult = stmt.get([category]);
-      const countObj = rowToObject(stmt, countResult);
-      stmt.free();
+    const categoriesWithCount = result.map(category => {
+      const countStmt = db.prepare('SELECT COUNT(*) as count FROM posts WHERE category = ?');
+      const countResult = countStmt.get([category.name]);
+      const countObj = rowToObject(countStmt, countResult);
+      countStmt.free();
 
       return {
-        name: category,
+        id: category.id,
+        name: category.name,
+        description: category.description || '',
         count: countObj.count
       };
     });

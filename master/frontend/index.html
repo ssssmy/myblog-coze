@@ -1872,19 +1872,74 @@
         try {
           const data = await apiRequest('/categories');
           const categories = data.data;
-          
-          // 更新分类卡片上的文章数量
+
+          // 获取分类卡片容器
+          const categoryCardsContainer = document.querySelector('.category-cards');
+
+          if (!categoryCardsContainer) return;
+
+          // 保留"全部文章"卡片，并动态更新其他分类
+          const allPostsCard = categoryCardsContainer.querySelector('.category-card:first-child');
+
+          // 计算总文章数
+          const totalCount = categories.reduce((sum, cat) => sum + cat.count, 0);
+          if (allPostsCard) {
+            const countEl = allPostsCard.querySelector('.count');
+            if (countEl) {
+              countEl.textContent = `${totalCount} 篇文章`;
+            }
+          }
+
+          // 移除旧的分类卡片（保留第一个"全部文章"卡片）
+          const oldCards = categoryCardsContainer.querySelectorAll('.category-card:not(:first-child)');
+          oldCards.forEach(card => card.remove());
+
+          // 图标映射
+          const iconMap = {
+            '技术': '💻',
+            '前端': '🎨',
+            '前端技术': '🎨',
+            '后端': '⚙️',
+            '生活': '🌱',
+            '随笔': '✍️',
+            '笔记': '📝',
+            '学习': '📚',
+            '旅行': '✈️',
+            '美食': '🍜',
+            '摄影': '📷',
+            '运动': '⚽',
+            '音乐': '🎵',
+            '电影': '🎬',
+            '读书': '📖'
+          };
+
+          // 动态生成分类卡片
           categories.forEach(cat => {
-            const countElements = document.querySelectorAll(`.category-card h3`);
-            countElements.forEach(el => {
-              if (el.textContent === cat.name) {
-                const countEl = el.parentElement.querySelector('.count');
-                if (countEl) {
-                  countEl.textContent = `${cat.count} 篇文章`;
-                }
-              }
-            });
+            const icon = iconMap[cat.name] || '📂';
+            const description = cat.description || `${cat.name}相关内容`;
+
+            const cardHTML = `
+              <div class="category-card" onclick="showPosts('${cat.name}')">
+                <div class="icon-container">${icon}</div>
+                <h3>${cat.name}</h3>
+                <p class="description">${description}</p>
+                <span class="count">${cat.count} 篇文章</span>
+              </div>
+            `;
+
+            categoryCardsContainer.insertAdjacentHTML('beforeend', cardHTML);
           });
+
+          // 更新统计数字
+          const categoryCountEl = document.querySelectorAll('.stat-item')[1].querySelector('.number');
+          if (categoryCountEl) {
+            categoryCountEl.textContent = categories.length;
+          }
+
+          const postCountEl = document.querySelectorAll('.stat-item')[0].querySelector('.number');
+          if (postCountEl) {
+            postCountEl.textContent = totalCount;
+          }
         } catch (error) {
           console.error('加载分类统计失败:', error);
         }
