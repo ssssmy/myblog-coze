@@ -1,7 +1,8 @@
 const express = require('express');
 const cors = require('cors');
-const sqlite3 = require('sqlite3').verbose();
+const initSqlJs = require('sql.js');
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const PORT = 3001;
@@ -10,19 +11,26 @@ const PORT = 3001;
 app.use(cors());
 app.use(express.json());
 
-// SQLite 数据库连接
+let db = null;
+let SQL = null;
 const dbPath = path.join(__dirname, '../../blog.db');
-const db = new sqlite3.Database(dbPath, (err) => {
-  if (err) {
-    console.error('数据库连接失败:', err.message);
-  } else {
-    console.log('✅ 数据库连接成功');
-  }
-});
 
-// 初始化数据库表
-function initializeDatabase() {
-  return new Promise((resolve, reject) => {
+// 初始化数据库
+async function initializeDatabase() {
+  try {
+    SQL = await initSqlJs();
+
+    // 如果数据库文件存在，则加载它
+    if (fs.existsSync(dbPath)) {
+      const fileBuffer = fs.readFileSync(dbPath);
+      db = new SQL.Database(fileBuffer);
+      console.log('✅ 数据库连接成功（从文件加载）');
+    } else {
+      // 否则创建新数据库
+      db = new SQL.Database();
+      console.log('✅ 数据库创建成功');
+    }
+
     // 创建 posts 表
     db.run(`CREATE TABLE IF NOT EXISTS posts (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -31,38 +39,45 @@ function initializeDatabase() {
       category TEXT NOT NULL,
       date TEXT NOT NULL,
       content TEXT NOT NULL
-    )`, (err) => {
-      if (err) {
-        console.error('创建表失败:', err.message);
-        reject(err);
-      } else {
-        console.log('✅ 数据表创建成功');
-        // 检查是否有数据，如果没有则插入示例数据
-        db.get('SELECT COUNT(*) as count FROM posts', (err, row) => {
-          if (err) {
-            reject(err);
-          } else if (row.count === 0) {
-            insertSampleData().then(resolve).catch(reject);
-          } else {
-            console.log(`✅ 数据库已有 ${row.count} 条记录`);
-            resolve();
-          }
-        });
-      }
-    });
-  });
+    )`);
+    console.log('✅ 数据表创建成功');
+
+    // 检查是否有数据，如果没有则插入示例数据
+    const result = db.exec('SELECT COUNT(*) as count FROM posts');
+    if (result.length === 0 || result[0].values[0][0] === 0) {
+      insertSampleData();
+      console.log('✅ 示例数据插入完成');
+    } else {
+      console.log(`✅ 数据库已有 ${result[0].values[0][0]} 条记录`);
+    }
+
+    // 保存数据库到文件
+    saveDatabase();
+  } catch (err) {
+    console.error('数据库初始化失败:', err);
+  }
+}
+
+// 保存数据库到文件
+function saveDatabase() {
+  try {
+    const data = db.export();
+    const buffer = Buffer.from(data);
+    fs.writeFileSync(dbPath, buffer);
+  } catch (err) {
+    console.error('保存数据库失败:', err);
+  }
 }
 
 // 插入示例数据
 function insertSampleData() {
-  return new Promise((resolve, reject) => {
-    const samplePosts = [
-      {
-        title: 'Vue 3 Composition API 深入理解',
-        excerpt: 'Vue 3 的 Composition API 为我们提供了更灵活的代码组织方式。本文将深入探讨其核心概念、使用场景以及最佳实践。',
-        category: '技术',
-        date: '2024-01-15',
-        content: `# Vue 3 Composition API 深入理解
+  const stmt = db.prepare(`INSERT INTO posts (title, excerpt, category, date, content) VALUES (?, ?, ?, ?, ?)`);
+  stmt.run([
+    'Vue 3 Composition API 深入理解',
+    'Vue 3 的 Composition API 为我们提供了更灵活的代码组织方式。本文将深入探讨其核心概念、使用场景以及最佳实践。',
+    '技术',
+    '2024-01-15',
+    `# Vue 3 Composition API 深入理解
 
 Vue 3 的 Composition API 是一个重要的新特性，它改变了我们组织 Vue 组件代码的方式。与传统的 Options API 相比，Composition API 提供了更好的代码组织、逻辑复用和类型推断能力。
 
@@ -79,11 +94,11 @@ export default {
   setup() {
     const count = ref(0)
     const doubled = computed(() => count.value * 2)
-    
+
     function increment() {
       count.value++
     }
-    
+
     return { count, doubled, increment }
   }
 }
@@ -121,13 +136,14 @@ const state = reactive({
 ## 总结
 
 Composition API 为 Vue 3 带来了更好的代码组织和复用能力，值得深入学习和实践。`
-      },
-      {
-        title: 'TypeScript 高级类型技巧',
-        excerpt: '掌握 TypeScript 的高级类型特性，可以让你的代码更加健壮和类型安全。本文介绍泛型、条件类型、映射类型等高级技巧。',
-        category: '技术',
-        date: '2024-01-10',
-        content: `# TypeScript 高级类型技巧
+  ]);
+
+  stmt.run([
+    'TypeScript 高级类型技巧',
+    '掌握 TypeScript 的高级类型特性，可以让你的代码更加健壮和类型安全。本文介绍泛型、条件类型、映射类型等高级技巧。',
+    '技术',
+    '2024-01-10',
+    `# TypeScript 高级类型技巧
 
 TypeScript 的类型系统非常强大，除了基本的类型注解外，还提供了许多高级类型特性。掌握这些特性可以让我们写出更加健壮和类型安全的代码。
 
@@ -191,13 +207,14 @@ type PartialUser = Partial<User>
 ## 总结
 
 掌握 TypeScript 的高级类型特性，可以大大提升代码的质量和可维护性。持续学习和实践是关键。`
-      },
-      {
-        title: '我的程序员工涯感悟',
-        excerpt: '作为一个程序员，我经历了从学生到职场人的转变。在这篇文章中，我分享一些关于职业发展的思考和感悟。',
-        category: '随笔',
-        date: '2024-01-05',
-        content: `# 我的程序员工涯感悟
+  ]);
+
+  stmt.run([
+    '我的程序员工涯感悟',
+    '作为一个程序员，我经历了从学生到职场人的转变。在这篇文章中，我分享一些关于职业发展的思考和感悟。',
+    '随笔',
+    '2024-01-05',
+    `# 我的程序员工涯感悟
 
 从大学时代开始接触编程，到现在已经过去了五年时间。这五年里，我从一个对代码一无所知的新手，成长为能够独立完成项目的开发者。
 
@@ -242,13 +259,14 @@ type PartialUser = Partial<User>
 ## 总结
 
 程序员的成长之路充满挑战，但也充满机遇。保持学习的热情，拥抱变化，不断提升自己，你就能在这个领域走得更远。`
-      },
-      {
-        title: '如何保持高效的学习状态',
-        excerpt: '在快速变化的技术领域，持续学习是必不可少的。本文分享一些我在学习过程中总结的方法和技巧。',
-        category: '生活',
-        date: '2024-01-01',
-        content: `# 如何保持高效的学习状态
+  ]);
+
+  stmt.run([
+    '如何保持高效的学习状态',
+    '在快速变化的技术领域，持续学习是必不可少的。本文分享一些我在学习过程中总结的方法和技巧。',
+    '生活',
+    '2024-01-01',
+    `# 如何保持高效的学习状态
 
 在快速变化的技术领域，保持高效的学习状态是非常重要的。作为一个程序员，我每天都在面对新的技术和挑战，如何才能高效地学习呢？
 
@@ -300,362 +318,143 @@ type PartialUser = Partial<User>
 ## 总结
 
 高效学习需要明确目标、制定计划、勤于实践、保持专注。掌握这些方法，你就能在技术道路上走得更远。`
-      },
-      {
-        title: '前端性能优化实战指南',
-        excerpt: '从代码层面到架构层面，全方位介绍前端性能优化的策略和最佳实践，帮助你构建更快的 Web 应用。',
-        category: '技术',
-        date: '2023-12-28',
-        content: `# 前端性能优化实战指南
+  ]);
 
-前端性能优化是提升用户体验的关键因素之一。一个快速响应的网站不仅能让用户感到满意，还能提高搜索引擎排名和转化率。本文将介绍一些实用的前端性能优化技巧。
-
-## 加载性能优化
-
-### 代码分割和懒加载
-
-代码分割和懒加载是优化首屏加载时间的重要手段。通过将代码拆分成多个小块，我们可以按需加载资源，减少初始加载时间。
-
-\`\`\`javascript
-// 动态 import 实现懒加载
-const LazyComponent = lazy(() => import('./LazyComponent'))
-
-function App() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <LazyComponent />
-    </Suspense>
-  )
-}
-\`\`\`
-
-### 图片优化
-
-- 使用 WebP 格式
-- 实现图片懒加载
-- 压缩图片大小
-- 使用 CDN 加速
-
-\`\`\`html
-<img 
-  src="image.webp" 
-  loading="lazy" 
-  alt="描述" 
-  width="800" 
-  height="600"
-/>
-\`\`\`
-
-## 运行时性能优化
-
-### 虚拟列表
-
-对于长列表，使用虚拟列表可以大幅提升性能：
-
-\`\`\`javascript
-// 只渲染可见区域的列表项
-const visibleItems = items.slice(startIndex, endIndex)
-\`\`\`
-
-### 防抖和节流
-
-对于频繁触发的事件，使用防抖和节流：
-
-\`\`\`javascript
-// 防抖：延迟执行
-function debounce(fn, delay) {
-  let timer
-  return function(...args) {
-    clearTimeout(timer)
-    timer = setTimeout(() => fn.apply(this, args), delay)
-  }
-}
-
-// 节流：限制执行频率
-function throttle(fn, limit) {
-  let inThrottle
-  return function(...args) {
-    if (!inThrottle) {
-      fn.apply(this, args)
-      inThrottle = true
-      setTimeout(() => inThrottle = false, limit)
-    }
-  }
-}
-\`\`\`
-
-## 性能监控
-
-使用工具监控性能：
-
-- Chrome DevTools
-- Lighthouse
-- WebPageTest
-- Performance API
-
-\`\`\`javascript
-// 使用 Performance API
-const perfData = performance.getEntriesByType('navigation')[0]
-console.log('页面加载时间:', perfData.loadEventEnd - perfData.fetchStart)
-\`\`\`
-
-## 总结
-
-前端性能优化是一个持续的过程，需要从多个方面入手。通过合理使用代码分割、懒加载、图片优化等技术，我们可以显著提升应用性能。`
-      },
-      {
-        title: '周末的咖啡时光',
-        excerpt: '在一个阳光明媚的周末，我来到了一家安静的咖啡馆，享受难得的闲暇时光。',
-        category: '生活',
-        date: '2023-12-25',
-        content: `# 周末的咖啡时光
-
-这是一个阳光明媚的周末，我决定给自己放个假，来到城市角落里的一家安静咖啡馆。推开木门，浓郁的咖啡香气扑面而来，让人瞬间放松下来。
-
-## 咖啡馆的小确幸
-
-点了一杯拿铁，找了一个靠窗的位置坐下。阳光透过玻璃窗洒在桌面上，给整个空间镀上了一层金色的光晕。街道上行人稀少，偶尔有几辆车驶过，打破了午后的宁静。
-
-> 生活不需要太多的奢华，一杯咖啡、一缕阳光，就足以让人感到幸福。
-
-## 观察与思考
-
-坐在咖啡馆里，我开始观察周围的每一个人：
-
-- 角落里的老人，正在专心地看报纸
-- 年轻的情侣，低声交谈着什么
-- 学生模样的女孩，在电脑上敲击着键盘
-
-每个人都有自己的故事，每个人都在为了生活而努力。
-
-## 放松身心
-
-这样的时光，是难得的休息。平时忙碌的生活，让我们很少有时间停下来，好好看看这个世界。
-
-> 忙碌是为了更好地生活，但别忘了生活本身。
-
-## 归途
-
-黄昏时分，我起身离开。夕阳的余晖洒在街道上，为这个美好的周末画上了一个完美的句号。带着满满的能量，我准备好迎接新的一周了。
-
----
-
-生活需要这样的小确幸，让我们在忙碌中找到平衡，在平凡中发现美好。`
-      }
-    ];
-
-    const stmt = db.prepare('INSERT INTO posts (title, excerpt, category, date, content) VALUES (?, ?, ?, ?, ?)');
-
-    db.serialize(() => {
-      samplePosts.forEach(post => {
-        stmt.run(post.title, post.excerpt, post.category, post.date, post.content);
-      });
-      stmt.finalize((err) => {
-        if (err) {
-          console.error('插入示例数据失败:', err.message);
-          reject(err);
-        } else {
-          console.log(`✅ 成功插入 ${samplePosts.length} 条示例数据`);
-          resolve();
-        }
-      });
-    });
-  });
+  stmt.free();
 }
 
 // API 路由
 
-// 获取所有文章
-app.get('/api/posts', (req, res) => {
-  db.all('SELECT * FROM posts ORDER BY date DESC', [], (err, rows) => {
-    if (err) {
-      res.status(500).json({
-        success: false,
-        message: '获取文章列表失败'
-      });
-    } else {
-      res.json({
-        success: true,
-        data: rows,
-        total: rows.length
-      });
-    }
-  });
+// 获取所有分类
+app.get('/api/categories', (req, res) => {
+  try {
+    const result = db.exec('SELECT DISTINCT category FROM posts ORDER BY category');
+    const categories = result.length > 0 ? result[0].values.map(row => row[0]) : [];
+    res.json(categories);
+  } catch (err) {
+    console.error('获取分类失败:', err);
+    res.status(500).json({ error: '获取分类失败' });
+  }
 });
 
 // 根据分类获取文章
-app.get('/api/posts/category/:category', (req, res) => {
-  const category = decodeURIComponent(req.params.category);
-  let query = 'SELECT * FROM posts';
-  let params = [];
+app.get('/api/posts', (req, res) => {
+  try {
+    const { category } = req.query;
+    let query = 'SELECT * FROM posts ORDER BY date DESC';
+    let params = [];
 
-  if (category !== '全部') {
-    query += ' WHERE category = ?';
-    params.push(category);
+    if (category) {
+      query = 'SELECT * FROM posts WHERE category = :category ORDER BY date DESC';
+      params = { ':category': category };
+    }
+
+    const stmt = db.prepare(query);
+    const result = stmt.all(params);
+    stmt.free();
+
+    // 转换结果格式
+    const columns = ['id', 'title', 'excerpt', 'category', 'date', 'content'];
+    const posts = result.map(row => {
+      const obj = {};
+      columns.forEach((col, i) => obj[col] = row[i]);
+      return obj;
+    });
+
+    res.json(posts);
+  } catch (err) {
+    console.error('获取文章失败:', err);
+    res.status(500).json({ error: '获取文章失败' });
   }
-
-  query += ' ORDER BY date DESC';
-
-  db.all(query, params, (err, rows) => {
-    if (err) {
-      res.status(500).json({
-        success: false,
-        message: '获取文章列表失败'
-      });
-    } else {
-      res.json({
-        success: true,
-        data: rows,
-        total: rows.length
-      });
-    }
-  });
 });
 
-// 获取单篇文章详情
+// 根据分类获取文章（仅返回标题和摘要）
+app.get('/api/posts/titles', (req, res) => {
+  try {
+    const { category } = req.query;
+    let query = 'SELECT id, title, excerpt, category, date FROM posts ORDER BY date DESC';
+    let params = {};
+
+    if (category) {
+      query = 'SELECT id, title, excerpt, category, date FROM posts WHERE category = :category ORDER BY date DESC';
+      params = { ':category': category };
+    }
+
+    const stmt = db.prepare(query);
+    const result = stmt.all(params);
+    stmt.free();
+
+    const columns = ['id', 'title', 'excerpt', 'category', 'date'];
+    const posts = result.map(row => {
+      const obj = {};
+      columns.forEach((col, i) => obj[col] = row[i]);
+      return obj;
+    });
+
+    res.json(posts);
+  } catch (err) {
+    console.error('获取文章失败:', err);
+    res.status(500).json({ error: '获取文章失败' });
+  }
+});
+
+// 根据ID获取文章详情
 app.get('/api/posts/:id', (req, res) => {
-  const id = parseInt(req.params.id);
-  db.get('SELECT * FROM posts WHERE id = ?', [id], (err, row) => {
-    if (err) {
-      res.status(500).json({
-        success: false,
-        message: '获取文章详情失败'
-      });
-    } else if (row) {
-      res.json({
-        success: true,
-        data: row
-      });
-    } else {
-      res.status(404).json({
-        success: false,
-        message: '文章不存在'
-      });
+  try {
+    const { id } = req.params;
+    const stmt = db.prepare('SELECT * FROM posts WHERE id = :id');
+    const result = stmt.all({ ':id': id });
+    stmt.free();
+
+    if (result.length === 0) {
+      return res.status(404).json({ error: '文章不存在' });
     }
-  });
+
+    const columns = ['id', 'title', 'excerpt', 'category', 'date', 'content'];
+    const post = {};
+    columns.forEach((col, i) => post[col] = result[0][i]);
+
+    res.json(post);
+  } catch (err) {
+    console.error('获取文章详情失败:', err);
+    res.status(500).json({ error: '获取文章详情失败' });
+  }
 });
 
-// 获取所有分类
-app.get('/api/categories', (req, res) => {
-  db.all('SELECT category, COUNT(*) as count FROM posts GROUP BY category', [], (err, rows) => {
-    if (err) {
-      res.status(500).json({
-        success: false,
-        message: '获取分类列表失败'
-      });
-    } else {
-      db.get('SELECT COUNT(*) as total FROM posts', [], (err, totalRow) => {
-        if (err) {
-          res.status(500).json({
-            success: false,
-            message: '获取总数失败'
-          });
-        } else {
-          res.json({
-            success: true,
-            data: [
-              { name: '全部', count: totalRow.total },
-              ...rows.map(row => ({ name: row.category, count: row.count }))
-            ]
-          });
-        }
-      });
+// 搜索文章
+app.get('/api/search', (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q) {
+      return res.json([]);
     }
-  });
-});
 
-// 获取统计信息
-app.get('/api/stats', (req, res) => {
-  db.get('SELECT COUNT(*) as totalPosts FROM posts', [], (err, postCountRow) => {
-    if (err) {
-      res.status(500).json({
-        success: false,
-        message: '获取统计信息失败'
-      });
-    } else {
-      db.all('SELECT COUNT(DISTINCT category) as totalCategories FROM posts', [], (err, catCountRow) => {
-        if (err) {
-          res.status(500).json({
-            success: false,
-            message: '获取分类统计失败'
-          });
-        } else {
-          db.get('SELECT * FROM posts ORDER BY date DESC LIMIT 1', [], (err, latestRow) => {
-            if (err) {
-              res.status(500).json({
-                success: false,
-                message: '获取最新文章失败'
-              });
-            } else {
-              res.json({
-                success: true,
-                data: {
-                  totalPosts: postCountRow.totalPosts,
-                  totalCategories: catCountRow[0].totalCategories,
-                  latestPost: latestRow
-                }
-              });
-            }
-          });
-        }
-      });
-    }
-  });
-});
+    const stmt = db.prepare(
+      'SELECT id, title, excerpt, category, date FROM posts WHERE title LIKE :q OR content LIKE :q ORDER BY date DESC'
+    );
+    const result = stmt.all({ ':q': `%${q}%` });
+    stmt.free();
 
-// 获取个人信息
-app.get('/api/profile', (req, res) => {
-  res.json({
-    success: true,
-    data: {
-      name: 'Alex Chen',
-      role: '全栈开发工程师',
-      bio: '热爱技术与生活',
-      avatar: '👨‍💻',
-      social: {
-        github: 'https://github.com',
-        twitter: 'https://twitter.com',
-        email: 'hello@example.com'
-      }
-    }
-  });
-});
+    const columns = ['id', 'title', 'excerpt', 'category', 'date'];
+    const posts = result.map(row => {
+      const obj = {};
+      columns.forEach((col, i) => obj[col] = row[i]);
+      return obj;
+    });
 
-// 健康检查
-app.get('/api/health', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Server is running',
-    timestamp: new Date().toISOString()
-  });
+    res.json(posts);
+  } catch (err) {
+    console.error('搜索失败:', err);
+    res.status(500).json({ error: '搜索失败' });
+  }
 });
 
 // 启动服务器
 initializeDatabase().then(() => {
   app.listen(PORT, () => {
-    console.log(`🚀 服务器运行在 http://localhost:${PORT}`);
-    console.log(`📝 API 端点:`);
-    console.log(`   GET  /api/health        - 健康检查`);
-    console.log(`   GET  /api/posts         - 获取所有文章`);
-    console.log(`   GET  /api/posts/:id     - 获取文章详情`);
-    console.log(`   GET  /api/posts/category/:category - 按分类获取文章`);
-    console.log(`   GET  /api/categories    - 获取所有分类`);
-    console.log(`   GET  /api/stats         - 获取统计信息`);
-    console.log(`   GET  /api/profile       - 获取个人信息`);
+    console.log(`🚀 博客后端服务运行在 http://localhost:${PORT}`);
   });
 }).catch(err => {
-  console.error('数据库初始化失败:', err.message);
+  console.error('初始化失败:', err);
   process.exit(1);
-});
-
-// 优雅关闭
-process.on('SIGINT', () => {
-  db.close((err) => {
-    if (err) {
-      console.error('关闭数据库连接失败:', err.message);
-    } else {
-      console.log('✅ 数据库连接已关闭');
-    }
-    process.exit(0);
-  });
 });
