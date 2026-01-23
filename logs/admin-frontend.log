@@ -5,7 +5,7 @@ npm warn Unknown project config "strict-peer-dependencies". This will stop worki
 > vite --port 5001 --host
 
 
-  VITE v7.3.1  ready in 310 ms
+  VITE v7.3.1  ready in 375 ms
 
   ➜  Local:   http://localhost:5001/
   ➜  Network: http://9.128.55.232:5001/

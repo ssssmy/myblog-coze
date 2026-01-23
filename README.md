@@ -40,9 +40,12 @@
   - Vue Router（路由管理）
   - marked（Markdown渲染）
 
-- **后端**
+- **后端**（统一后端服务）
   - Express.js（Web框架）
-  - SQLite3（数据库）
+  - sql.js（数据库驱动）
+  - JWT（身份认证）
+  - bcryptjs（密码加密）
+  - XLSX（Excel导出）
 
 ### 管理后台
 - **前端**
@@ -55,11 +58,7 @@
   - marked（Markdown渲染）
 
 - **后端**
-  - Express.js
-  - SQLite3
-  - JWT（身份认证）
-  - bcryptjs（密码加密）
-  - XLSX（Excel导出）
+  - 共享统一后端服务（同上）
 
 ## 项目结构
 
@@ -79,20 +78,8 @@
 │   ├── check-env.bat/sh        # 环境检查工具
 │   └── TROUBLESHOOTING.md      # 故障排除指南
 ├── admin/                      # 管理后台
-│   ├── backend/                # 管理后台后端
-│   │   ├── .npmrc              # npm 配置
-│   │   ├── admin.db            # 管理后台数据库（用户数据）
-│   │   ├── middleware/         # 中间件
-│   │   │   └── auth.js         # JWT认证中间件
-│   │   ├── routes/             # 路由
-│   │   │   ├── auth.js         # 认证路由
-│   │   │   ├── posts.js        # 文章路由
-│   │   │   └── profile.js      # 个人信息路由
-│   │   ├── server.js           # 服务器入口
-│   │   ├── package.json
-│   │   └── scripts/
-│   │       └── start.sh        # 启动脚本
 │   ├── frontend/               # 管理后台前端
+│   │   ├── .npmrc              # npm 配置
 │   │   ├── src/
 │   │   │   ├── api/            # API封装
 │   │   │   ├── components/     # 组件
@@ -109,13 +96,20 @@
 │   │   ├── package.json
 │   │   └── vite.config.ts
 │   └── README.md
+├── backend/                    # 统一后端服务
+│   ├── .npmrc                  # npm 配置
+│   ├── .pnpmfile.cjs           # pnpm 配置
+│   ├── middleware/             # 中间件
+│   │   └── auth.js             # JWT 认证中间件
+│   ├── routes/                 # 路由（未使用，已合并到server.js）
+│   │   ├── posts.js            # 文章路由
+│   │   └── profile.js          # 个人信息路由
+│   ├── scripts/                # 脚本文件
+│   ├── node_modules/           # 依赖包
+│   ├── server.js               # 服务器入口
+│   ├── package.json
+│   └── pnpm-lock.yaml
 ├── master/                     # 主项目
-│   ├── backend/                # 主项目后端
-│   │   ├── .npmrc              # npm 配置
-│   │   ├── server.js           # 服务器入口
-│   │   ├── package.json
-│   │   └── scripts/
-│   │       └── start.sh        # 启动脚本
 │   ├── frontend/               # 主项目前端
 │   │   ├── .npmrc              # npm 配置
 │   │   ├── src/
@@ -134,7 +128,18 @@
 │   │   ├── package.json
 │   │   └── vite.config.ts
 │   └── README.md
-├── blog.db                     # 博客数据库（文章数据，共享）
+├── scripts/                    # 全局启动脚本
+│   ├── check-env.sh            # 环境检查
+│   ├── check-ports.sh          # 端口检查
+│   ├── start-all.sh            # 启动所有服务
+│   ├── start-master.sh         # 启动主项目
+│   ├── start-admin.sh          # 启动管理后台
+│   └── stop-all.sh             # 停止所有服务
+├── blog.db                     # 博客数据库（文章数据）
+├── logs/                       # 日志目录
+├── .gitignore
+├── .npmrc
+├── package.json
 └── README.md
 ```
 
@@ -309,11 +314,9 @@ pnpm dev
 
 ### 管理后台
 
-**1. 启动后端服务（端口 3002）**
+**1. 确保后端服务已启动**
 ```bash
-cd admin/backend
-npm install
-npm start
+# 后端服务在端口 3001
 ```
 
 **2. 启动前端服务（端口 5001）**
@@ -337,22 +340,19 @@ npm run dev
 | 主项目前端 | 5000 | Vue 3 + Vite 开发服务器 |
 | 主项目后端 | 3001 | Express.js API 服务 |
 | 管理后台前端 | 5001 | Vue 3 + Element Plus 开发服务器 |
-| 管理后台后端 | 3002 | Express.js API 服务 |
+| 后端API服务 | 3001 | Express.js API 服务 |
 
 ## 数据库说明
 
 ### 数据库结构
 
-项目使用 SQLite 数据库：
+项目使用 sql.js 驱动 SQLite 数据库：
 
 **blog.db**（根目录 - 共享数据库）
 - 存储文章数据（posts 表）
-- 主项目和管理后台共享此数据库
-- 通过 SQLite ATTACH DATABASE 实现共享访问
-
-**admin.db**（admin/backend/ - 管理后台专用）
 - 存储用户数据（users 表）
-- 仅管理后台使用
+- 主项目和管理后台共享此数据库
+- 由统一后端服务管理
 
 ### 数据表结构
 

@@ -16,11 +16,11 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 LOG_DIR="$PROJECT_ROOT/logs"
 mkdir -p "$LOG_DIR"
 
-# 启动主项目后端
-start_master_backend() {
+# 启动后端服务
+start_backend() {
     echo ""
-    echo "🚀 启动主项目后端 (端口 3001)..."
-    cd "$PROJECT_ROOT/master/backend"
+    echo "🚀 启动后端服务 (端口 3001)..."
+    cd "$PROJECT_ROOT/backend"
 
     # 检查依赖
     if [ ! -d "node_modules" ]; then
@@ -28,14 +28,14 @@ start_master_backend() {
         npm install
     fi
 
-    nohup npm start > "$LOG_DIR/master-backend.log" 2>&1 &
-    echo $! > "$LOG_DIR/master-backend.pid"
+    nohup npm start > "$LOG_DIR/backend.log" 2>&1 &
+    echo $! > "$LOG_DIR/backend.pid"
 
     sleep 5
     if ss -tuln 2>/dev/null | grep -q ":3001[[:space:]]"; then
-        echo "  ✅ 主项目后端启动成功"
+        echo "  ✅ 后端服务启动成功"
     else
-        echo "  ❌ 主项目后端启动失败，查看日志: tail -f $LOG_DIR/master-backend.log"
+        echo "  ❌ 后端服务启动失败，查看日志: tail -f $LOG_DIR/backend.log"
         exit 1
     fi
 }
@@ -78,7 +78,7 @@ show_status() {
     echo "ℹ️  说明：此后端同时支持主项目和管理后台"
     echo ""
     echo "📝 日志文件："
-    echo "  后端:           $LOG_DIR/master-backend.log"
+    echo "  后端:           $LOG_DIR/backend.log"
     echo "  前端:           $LOG_DIR/master-frontend.log"
     echo ""
 }
@@ -86,7 +86,7 @@ show_status() {
 # 主流程
 cd "$PROJECT_ROOT"
 
-start_master_backend
+start_backend
 start_master_frontend
 
 show_status
