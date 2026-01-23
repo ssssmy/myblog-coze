@@ -45,9 +45,29 @@ export const exportPosts = () => {
   return request.get('/admin/posts/export/excel', { responseType: 'blob' })
 }
 
-// 获取所有分类
+// 获取所有分类（用于下拉选择）
 export const getCategories = () => {
   return request.get('/admin/posts/categories/all')
+}
+
+// 获取分类列表（带分页）
+export const getCategoryList = (params: any) => {
+  return request.get('/admin/categories', { params })
+}
+
+// 创建分类
+export const createCategory = (data: any) => {
+  return request.post('/admin/categories', data)
+}
+
+// 更新分类
+export const updateCategory = (id: number, data: any) => {
+  return request.put(`/admin/categories/${id}`, data)
+}
+
+// 删除分类
+export const deleteCategory = (id: number) => {
+  return request.delete(`/admin/categories/${id}`)
 }
 
 // 获取个人信息

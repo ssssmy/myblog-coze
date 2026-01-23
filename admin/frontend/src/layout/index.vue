@@ -26,6 +26,11 @@
             <template #title>文章管理</template>
           </el-menu-item>
 
+          <el-menu-item index="/categories">
+            <el-icon><Menu /></el-icon>
+            <template #title>分类管理</template>
+          </el-menu-item>
+
           <el-menu-item index="/profile">
             <el-icon><User /></el-icon>
             <template #title>个人信息</template>

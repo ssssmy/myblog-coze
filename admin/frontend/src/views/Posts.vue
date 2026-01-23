@@ -15,9 +15,9 @@
           <el-select v-model="searchForm.category" placeholder="选择分类" clearable style="width: 150px">
             <el-option
               v-for="category in categories"
-              :key="category"
-              :label="category"
-              :value="category"
+              :key="category.id"
+              :label="category.name"
+              :value="category.name"
             />
           </el-select>
         </el-form-item>
@@ -96,7 +96,7 @@ const tableRef = ref()
 const loading = ref(false)
 const tableData = ref<any[]>([])
 const selectedIds = ref<number[]>([])
-const categories = ref<string[]>([])
+const categories = ref<any[]>([])
 
 const searchForm = ref({
   keyword: '',
@@ -131,7 +131,8 @@ const loadData = async () => {
 const loadCategories = async () => {
   try {
     const res = await getCategories()
-    categories.value = res.data
+    // 新的 API 返回格式: { success: true, data: [{ id, name }, ...] }
+    categories.value = res.data || []
   } catch (error) {
     console.error('加载分类失败:', error)
   }

@@ -89,6 +89,36 @@ async function initializeDatabase() {
     )`);
     console.log('✅ posts 表创建成功');
 
+    // 创建 categories 表（分类表）
+    db.run(`CREATE TABLE IF NOT EXISTS categories (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT UNIQUE NOT NULL,
+      description TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`);
+    console.log('✅ categories 表创建成功');
+
+    // 初始化默认分类（如果不存在）
+    const defaultCategories = [
+      { name: '技术', description: '编程、开发、技术分享' },
+      { name: '生活', description: '日常、感悟、生活记录' },
+      { name: '随笔', description: '思考、随笔、心情日记' }
+    ];
+
+    const existingCategoriesResult = db.exec('SELECT name FROM categories');
+    const existingCategories = existingCategoriesResult.length > 0
+      ? existingCategoriesResult[0].values.map(row => row[0])
+      : [];
+
+    defaultCategories.forEach(cat => {
+      if (!existingCategories.includes(cat.name)) {
+        const stmt = db.prepare('INSERT INTO categories (name, description) VALUES (?, ?)');
+        stmt.run([cat.name, cat.description]);
+        stmt.free();
+      }
+    });
+    console.log('✅ 默认分类初始化完成');
+
     // 检查是否有示例数据，如果没有则插入
     const result = db.exec('SELECT COUNT(*) as count FROM posts');
     if (result.length === 0 || result[0].values[0][0] === 0) {
@@ -817,22 +847,202 @@ app.post('/api/admin/posts/batch-delete', authenticateToken, (req, res) => {
 // 获取所有分类（管理后台）
 app.get('/api/admin/posts/categories/all', authenticateToken, (req, res) => {
   try {
-    const result = db.exec('SELECT DISTINCT category FROM posts ORDER BY category');
+    const stmt = db.prepare('SELECT id, name FROM categories ORDER BY name');
+    stmt.bind([]);
 
-    if (result.length === 0) {
-      return res.json({
-        success: true,
-        data: []
-      });
+    const result = [];
+    while (stmt.step()) {
+      result.push(stmt.getAsObject());
     }
+    stmt.free();
 
     res.json({
       success: true,
-      data: result[0].values.map(row => row[0])
+      data: result
     });
   } catch (err) {
     console.error('查询分类错误:', err);
     res.status(500).json({ success: false, message: '查询失败' });
+  }
+});
+
+// ==================== 分类管理 API 路由（需要认证）====================
+
+// 获取分类列表（带分页）
+app.get('/api/admin/categories', authenticateToken, (req, res) => {
+  const { page = 1, pageSize = 10, keyword = '' } = req.query;
+  const offset = (page - 1) * pageSize;
+
+  try {
+    let query = 'SELECT * FROM categories WHERE 1=1';
+    let params = [];
+
+    if (keyword) {
+      query += ' AND (name LIKE ? OR description LIKE ?)';
+      params.push(`%${keyword}%`, `%${keyword}%`);
+    }
+
+    // 先获取总数
+    const countQuery = query.replace('SELECT *', 'SELECT COUNT(*) as total');
+    const countStmt = db.prepare(countQuery);
+    const countResult = countStmt.get(params);
+    const countObj = rowToObject(countStmt, countResult);
+    countStmt.free();
+
+    // 获取数据
+    query += ' ORDER BY id DESC LIMIT ? OFFSET ?';
+    params.push(parseInt(pageSize), offset);
+
+    const stmt = db.prepare(query);
+    stmt.bind(params);
+
+    const result = [];
+    while (stmt.step()) {
+      result.push(stmt.getAsObject());
+    }
+
+    stmt.free();
+
+    // 为每个分类添加文章数量统计
+    const categoriesWithCount = result.map(category => {
+      const countStmt = db.prepare('SELECT COUNT(*) as count FROM posts WHERE category = ?');
+      const countResult = countStmt.get([category.name]);
+      const countObj = rowToObject(countStmt, countResult);
+      countStmt.free();
+
+      return {
+        ...category,
+        post_count: countObj.count
+      };
+    });
+
+    res.json({
+      success: true,
+      data: {
+        list: categoriesWithCount,
+        total: countObj.total,
+        page: parseInt(page),
+        pageSize: parseInt(pageSize)
+      }
+    });
+  } catch (err) {
+    console.error('查询分类列表错误:', err);
+    res.status(500).json({ success: false, message: '查询失败' });
+  }
+});
+
+// 获取所有分类（不分页，用于下拉选择）
+app.get('/api/admin/categories/all', authenticateToken, (req, res) => {
+  try {
+    const stmt = db.prepare('SELECT id, name FROM categories ORDER BY name');
+    stmt.bind([]);
+
+    const result = [];
+    while (stmt.step()) {
+      result.push(stmt.getAsObject());
+    }
+    stmt.free();
+
+    res.json({
+      success: true,
+      data: result
+    });
+  } catch (err) {
+    console.error('查询分类错误:', err);
+    res.status(500).json({ success: false, message: '查询失败' });
+  }
+});
+
+// 创建分类
+app.post('/api/admin/categories', authenticateToken, (req, res) => {
+  const { name, description } = req.body;
+
+  if (!name || !name.trim()) {
+    return res.status(400).json({ success: false, message: '分类名称不能为空' });
+  }
+
+  try {
+    const stmt = db.prepare('INSERT INTO categories (name, description) VALUES (?, ?)');
+    const info = stmt.run([name.trim(), description || '']);
+    stmt.free();
+
+    // 保存数据库
+    saveDatabase();
+
+    res.json({ success: true, data: { id: info.lastInsertRowid } });
+  } catch (err) {
+    console.error('创建分类错误:', err);
+    if (err.message.includes('UNIQUE')) {
+      res.status(400).json({ success: false, message: '分类名称已存在' });
+    } else {
+      res.status(500).json({ success: false, message: '创建失败' });
+    }
+  }
+});
+
+// 更新分类
+app.put('/api/admin/categories/:id', authenticateToken, (req, res) => {
+  const { name, description } = req.body;
+
+  if (!name || !name.trim()) {
+    return res.status(400).json({ success: false, message: '分类名称不能为空' });
+  }
+
+  try {
+    const stmt = db.prepare('UPDATE categories SET name = ?, description = ? WHERE id = ?');
+    stmt.run([name.trim(), description || '', req.params.id]);
+    stmt.free();
+
+    // 保存数据库
+    saveDatabase();
+
+    res.json({ success: true, message: '更新成功' });
+  } catch (err) {
+    console.error('更新分类错误:', err);
+    if (err.message.includes('UNIQUE')) {
+      res.status(400).json({ success: false, message: '分类名称已存在' });
+    } else {
+      res.status(500).json({ success: false, message: '更新失败' });
+    }
+  }
+});
+
+// 删除分类
+app.delete('/api/admin/categories/:id', authenticateToken, (req, res) => {
+  try {
+    // 检查分类是否存在
+    const stmt = db.prepare('SELECT * FROM categories WHERE id = ?');
+    const result = stmt.get([req.params.id]);
+    stmt.free();
+
+    if (!result || result.length === 0) {
+      return res.status(404).json({ success: false, message: '分类不存在' });
+    }
+
+    // 检查是否有文章使用该分类
+    const category = rowToObject(db.prepare('SELECT * FROM categories WHERE id = ?'), result);
+
+    const postCountStmt = db.prepare('SELECT COUNT(*) as count FROM posts WHERE category = ?');
+    const postCountResult = postCountStmt.get([category.name]);
+    const postCountObj = rowToObject(postCountStmt, postCountResult);
+    postCountStmt.free();
+
+    if (postCountObj.count > 0) {
+      return res.status(400).json({ success: false, message: `该分类下还有 ${postCountObj.count} 篇文章，无法删除` });
+    }
+
+    // 删除分类
+    const deleteStmt = db.prepare('DELETE FROM categories WHERE id = ?');
+    deleteStmt.run([req.params.id]);
+    deleteStmt.free();
+
+    // 保存数据库
+    saveDatabase();
+
+    res.json({ success: true, message: '删除成功' });
+  } catch (err) {
+    console.error('删除分类错误:', err);
+    res.status(500).json({ success: false, message: '删除失败' });
   }
 });
 

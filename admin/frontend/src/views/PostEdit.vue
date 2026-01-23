@@ -19,15 +19,13 @@
                 v-model="form.category"
                 placeholder="请选择分类"
                 size="large"
-                filterable
-                allow-create
                 style="width: 100%"
               >
                 <el-option
                   v-for="category in categories"
-                  :key="category"
-                  :label="category"
-                  :value="category"
+                  :key="category.id"
+                  :label="category.name"
+                  :value="category.name"
                 />
               </el-select>
             </el-form-item>
@@ -112,7 +110,7 @@ const route = useRoute()
 const formRef = ref<FormInstance>()
 const loading = ref(false)
 const activeTab = ref('edit')
-const categories = ref<string[]>([])
+const categories = ref<any[]>([])
 
 const isEdit = computed(() => !!route.params.id)
 
@@ -150,7 +148,8 @@ const loadPostDetail = async () => {
 const loadCategories = async () => {
   try {
     const res = await getCategories()
-    categories.value = res.data
+    // 新的 API 返回格式: { success: true, data: [{ id, name }, ...] }
+    categories.value = res.data || []
   } catch (error) {
     console.error('加载分类失败:', error)
   }
