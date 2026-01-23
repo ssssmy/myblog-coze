@@ -6,6 +6,14 @@ const { JWT_SECRET } = require('../middleware/auth');
 const path = require('path');
 const fs = require('fs');
 
+// 将 sql.js 返回的数组转换为对象
+function rowToObject(stmt, row) {
+  const columns = stmt.getColumnNames();
+  const obj = {};
+  columns.forEach((col, i) => obj[col] = row[i]);
+  return obj;
+}
+
 module.exports = router;
 
 // 用户登录
@@ -22,16 +30,14 @@ router.post('/login', (req, res) => {
     const result = stmt.get([username]);
     stmt.free();
 
-    if (!result) {
+    if (!result || result.length === 0) {
       return res.status(401).json({ success: false, message: '用户名或密码错误' });
     }
 
-    const user = {
-      id: result.id,
-      username: result.username,
-      password: result.password,
-      email: result.email
-    };
+    // 创建新的 stmt 来获取列名
+    const stmt2 = adminDb.prepare('SELECT * FROM users WHERE username = ?');
+    const user = rowToObject(stmt2, result);
+    stmt2.free();
 
     // 验证密码
     const isValid = bcrypt.compareSync(password, user.password);
@@ -78,14 +84,14 @@ router.post('/change-password', (req, res) => {
     const result = stmt.get([username]);
     stmt.free();
 
-    if (!result) {
+    if (!result || result.length === 0) {
       return res.status(404).json({ success: false, message: '用户不存在' });
     }
 
-    const user = {
-      id: result.id,
-      password: result.password
-    };
+    // 创建新的 stmt 来获取列名
+    const stmt2 = adminDb.prepare('SELECT * FROM users WHERE username = ?');
+    const user = rowToObject(stmt2, result);
+    stmt2.free();
 
     const isValid = bcrypt.compareSync(oldPassword, user.password);
 

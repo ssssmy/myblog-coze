@@ -5,6 +5,24 @@ const { authenticateToken } = require('../middleware/auth');
 const path = require('path');
 const fs = require('fs');
 
+// 将 sql.js 返回的数组转换为对象
+function rowToObject(stmt, row) {
+  const columns = stmt.getColumnNames();
+  const obj = {};
+  columns.forEach((col, i) => obj[col] = row[i]);
+  return obj;
+}
+
+// 将 sql.js 返回的数组列表转换为对象列表
+function rowsToObjectArray(stmt, rows) {
+  const columns = stmt.getColumnNames();
+  return rows.map(row => {
+    const obj = {};
+    columns.forEach((col, i) => obj[col] = row[i]);
+    return obj;
+  });
+}
+
 module.exports = router;
 
 // 获取所有文章（包括已删除的）
@@ -31,6 +49,7 @@ router.get('/list', authenticateToken, (req, res) => {
     const countQuery = query.replace('SELECT *', 'SELECT COUNT(*) as total');
     const countStmt = blogDb.prepare(countQuery);
     const countResult = countStmt.get(params);
+    const countObj = rowToObject(countStmt, countResult);
     countStmt.free();
 
     // 获取数据
@@ -39,13 +58,14 @@ router.get('/list', authenticateToken, (req, res) => {
 
     const stmt = blogDb.prepare(query);
     const result = stmt.all(params);
+    const rows = rowsToObjectArray(stmt, result);
     stmt.free();
 
     res.json({
       success: true,
       data: {
-        list: result,
-        total: countResult.total,
+        list: rows,
+        total: countObj.total,
         page: parseInt(page),
         pageSize: parseInt(pageSize)
       }
@@ -64,11 +84,16 @@ router.get('/:id', authenticateToken, (req, res) => {
     const result = stmt.get([req.params.id]);
     stmt.free();
 
-    if (!result) {
+    if (!result || result.length === 0) {
       return res.status(404).json({ success: false, message: '文章不存在' });
     }
 
-    res.json({ success: true, data: result });
+    // 创建新的 stmt 来获取列名
+    const stmt2 = blogDb.prepare('SELECT * FROM posts WHERE id = ?');
+    const post = rowToObject(stmt2, result);
+    stmt2.free();
+
+    res.json({ success: true, data: post });
   } catch (err) {
     console.error('查询文章详情错误:', err);
     res.status(500).json({ success: false, message: '查询失败' });

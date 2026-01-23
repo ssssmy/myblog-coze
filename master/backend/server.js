@@ -15,6 +15,24 @@ let db = null;
 let SQL = null;
 const dbPath = path.join(__dirname, '../../blog.db');
 
+// 将 sql.js 返回的数组转换为对象
+function rowToObject(stmt, row) {
+  const columns = stmt.getColumnNames();
+  const obj = {};
+  columns.forEach((col, i) => obj[col] = row[i]);
+  return obj;
+}
+
+// 将 sql.js 返回的数组列表转换为对象列表
+function rowsToObjectArray(stmt, rows) {
+  const columns = stmt.getColumnNames();
+  return rows.map(row => {
+    const obj = {};
+    columns.forEach((col, i) => obj[col] = row[i]);
+    return obj;
+  });
+}
+
 // 初始化数据库
 async function initializeDatabase() {
   try {
@@ -352,9 +370,10 @@ app.get('/api/posts', (req, res) => {
 
     const stmt = db.prepare(query);
     const result = stmt.all(params);
+    const posts = rowsToObjectArray(stmt, result);
     stmt.free();
 
-    res.json(result);
+    res.json(posts);
   } catch (err) {
     console.error('获取文章失败:', err);
     res.status(500).json({ error: '获取文章失败' });
@@ -375,9 +394,10 @@ app.get('/api/posts/titles', (req, res) => {
 
     const stmt = db.prepare(query);
     const result = stmt.all(params);
+    const posts = rowsToObjectArray(stmt, result);
     stmt.free();
 
-    res.json(result);
+    res.json(posts);
   } catch (err) {
     console.error('获取文章失败:', err);
     res.status(500).json({ error: '获取文章失败' });
@@ -392,11 +412,16 @@ app.get('/api/posts/:id', (req, res) => {
     const result = stmt.get([id]);
     stmt.free();
 
-    if (!result) {
+    if (!result || result.length === 0) {
       return res.status(404).json({ error: '文章不存在' });
     }
 
-    res.json(result);
+    // 创建新的 stmt 来获取列名
+    const stmt2 = db.prepare('SELECT * FROM posts WHERE id = ?');
+    const post = rowToObject(stmt2, result);
+    stmt2.free();
+
+    res.json(post);
   } catch (err) {
     console.error('获取文章详情失败:', err);
     res.status(500).json({ error: '获取文章详情失败' });
@@ -415,9 +440,10 @@ app.get('/api/search', (req, res) => {
       'SELECT id, title, excerpt, category, date FROM posts WHERE title LIKE ? OR content LIKE ? ORDER BY date DESC'
     );
     const result = stmt.all([`%${q}%`, `%${q}%`]);
+    const posts = rowsToObjectArray(stmt, result);
     stmt.free();
 
-    res.json(result);
+    res.json(posts);
   } catch (err) {
     console.error('搜索失败:', err);
     res.status(500).json({ error: '搜索失败' });
