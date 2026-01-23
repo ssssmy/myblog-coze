@@ -861,7 +861,31 @@ app.get('/api/admin/posts/export/excel', authenticateToken, (req, res) => {
   }
 });
 
-// 获取个人信息
+// 公开获取个人信息（博客主页使用，无需认证）
+app.get('/api/public/profile', (req, res) => {
+  const profilePath = path.join(__dirname, '../../profile.json');
+
+  if (fs.existsSync(profilePath)) {
+    const data = fs.readFileSync(profilePath, 'utf8');
+    res.json({ success: true, data: JSON.parse(data) });
+  } else {
+    res.json({
+      success: true,
+      data: {
+        name: '博客主人',
+        role: '全栈开发者',
+        avatar: '👨‍💻',
+        social: {
+          github: '',
+          twitter: '',
+          email: ''
+        }
+      }
+    });
+  }
+});
+
+// 获取个人信息（需要认证，管理后台使用）
 app.get('/api/profile', authenticateToken, (req, res) => {
   const profilePath = path.join(__dirname, '../../profile.json');
 

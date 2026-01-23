@@ -1893,7 +1893,7 @@
       // 加载个人信息
       async function loadProfile() {
         try {
-          const data = await apiRequest('/profile');
+          const data = await apiRequest('/public/profile');
           const profile = data.data;
           
           // 更新DOM
