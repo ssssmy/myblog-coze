@@ -94,9 +94,24 @@ async function initializeDatabase() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT UNIQUE NOT NULL,
       description TEXT,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      parent_id INTEGER,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (parent_id) REFERENCES categories(id) ON DELETE CASCADE
     )`);
     console.log('✅ categories 表创建成功');
+
+    // 检查并添加 parent_id 字段（用于兼容旧数据）
+    try {
+      const tableInfo = db.exec("PRAGMA table_info(categories)");
+      const hasParentId = tableInfo[0].values.some(row => row[1] === 'parent_id');
+
+      if (!hasParentId) {
+        db.run('ALTER TABLE categories ADD COLUMN parent_id INTEGER REFERENCES categories(id) ON DELETE CASCADE');
+        console.log('✅ 已为 categories 表添加 parent_id 字段');
+      }
+    } catch (err) {
+      console.log('ℹ️  parent_id 字段已存在或添加失败:', err.message);
+    }
 
     // 初始化默认分类（如果不存在）
     const defaultCategories = [
@@ -144,6 +159,24 @@ function saveDatabase() {
   } catch (err) {
     console.error('保存数据库失败:', err);
   }
+}
+
+// 构建树形结构
+function buildCategoryTree(categories, parentId = null) {
+  const tree = [];
+
+  categories.forEach(category => {
+    if (category.parent_id === parentId) {
+      const children = buildCategoryTree(categories, category.id);
+      const categoryWithChildren = {
+        ...category,
+        children: children.length > 0 ? children : undefined
+      };
+      tree.push(categoryWithChildren);
+    }
+  });
+
+  return tree;
 }
 
 // 插入示例数据
@@ -406,7 +439,7 @@ type PartialUser = Partial<User>
 // 获取所有分类
 app.get('/api/categories', (req, res) => {
   try {
-    const stmt = db.prepare('SELECT id, name, description FROM categories ORDER BY name');
+    const stmt = db.prepare('SELECT id, name, description, parent_id FROM categories ORDER BY id');
     stmt.bind([]);
 
     const result = [];
@@ -415,22 +448,37 @@ app.get('/api/categories', (req, res) => {
     }
     stmt.free();
 
+    // 构建树形结构
+    const tree = buildCategoryTree(result);
+
     // 为每个分类添加文章数量统计
-    const categoriesWithCount = result.map(category => {
-      const countStmt = db.prepare('SELECT COUNT(*) as count FROM posts WHERE category = ?');
-      const countResult = countStmt.get([category.name]);
-      const countObj = rowToObject(countStmt, countResult);
-      countStmt.free();
+    const countCategories = (categories) => {
+      return categories.map(category => {
+        const countStmt = db.prepare('SELECT COUNT(*) as count FROM posts WHERE category = ?');
+        const countResult = countStmt.get([category.name]);
+        const countObj = rowToObject(countStmt, countResult);
+        countStmt.free();
 
-      return {
-        id: category.id,
-        name: category.name,
-        description: category.description || '',
-        count: countObj.count
-      };
-    });
+        const categoryWithCount = {
+          ...category,
+          count: countObj.count
+        };
 
-    res.json({ success: true, data: categoriesWithCount });
+        if (category.children) {
+          categoryWithCount.children = countCategories(category.children);
+          categoryWithCount.count = category.children.reduce(
+            (sum, child) => sum + child.count,
+            categoryWithCount.count
+          );
+        }
+
+        return categoryWithCount;
+      });
+    };
+
+    const treeWithCount = countCategories(tree);
+
+    res.json({ success: true, data: treeWithCount });
   } catch (err) {
     console.error('获取分类失败:', err);
     res.status(500).json({ success: false, message: '获取分类失败' });
@@ -911,7 +959,7 @@ app.get('/api/admin/categories', authenticateToken, (req, res) => {
 
     stmt.free();
 
-    // 为每个分类添加文章数量统计
+    // 为每个分类添加文章数量统计和父分类信息
     const categoriesWithCount = result.map(category => {
       const countStmt = db.prepare('SELECT COUNT(*) as count FROM posts WHERE category = ?');
       const countResult = countStmt.get([category.name]);
@@ -939,10 +987,10 @@ app.get('/api/admin/categories', authenticateToken, (req, res) => {
   }
 });
 
-// 获取所有分类（不分页，用于下拉选择）
-app.get('/api/admin/categories/all', authenticateToken, (req, res) => {
+// 获取所有分类（树形结构，用于管理后台展示）
+app.get('/api/admin/categories/tree', authenticateToken, (req, res) => {
   try {
-    const stmt = db.prepare('SELECT id, name FROM categories ORDER BY name');
+    const stmt = db.prepare('SELECT id, name, description, parent_id, created_at FROM categories ORDER BY id');
     stmt.bind([]);
 
     const result = [];
@@ -951,9 +999,87 @@ app.get('/api/admin/categories/all', authenticateToken, (req, res) => {
     }
     stmt.free();
 
+    // 构建树形结构
+    const tree = buildCategoryTree(result);
+
+    // 为每个分类添加文章数量统计
+    const countCategories = (categories) => {
+      return categories.map(category => {
+        const countStmt = db.prepare('SELECT COUNT(*) as count FROM posts WHERE category = ?');
+        const countResult = countStmt.get([category.name]);
+        const countObj = rowToObject(countStmt, countResult);
+        countStmt.free();
+
+        const categoryWithCount = {
+          ...category,
+          post_count: countObj.count
+        };
+
+        if (category.children) {
+          categoryWithCount.children = countCategories(category.children);
+          categoryWithCount.post_count = category.children.reduce(
+            (sum, child) => sum + child.post_count, 
+            categoryWithCount.post_count
+          );
+        }
+
+        return categoryWithCount;
+      });
+    };
+
+    const treeWithCount = countCategories(tree);
+
     res.json({
       success: true,
-      data: result
+      data: treeWithCount
+    });
+  } catch (err) {
+    console.error('查询分类树错误:', err);
+    res.status(500).json({ success: false, message: '查询失败' });
+  }
+});
+
+// 获取所有分类（不分页，用于下拉选择）
+app.get('/api/admin/categories/all', authenticateToken, (req, res) => {
+  try {
+    const stmt = db.prepare('SELECT id, name, parent_id FROM categories ORDER BY id');
+    stmt.bind([]);
+
+    const result = [];
+    while (stmt.step()) {
+      result.push(stmt.getAsObject());
+    }
+    stmt.free();
+
+    // 构建树形结构
+    const tree = buildCategoryTree(result);
+
+    // 扁平化树形结构，添加路径信息
+    const flattenTree = (categories, path = []) => {
+      let flattened = [];
+
+      categories.forEach(category => {
+        const currentPath = [...path, category.name];
+        const categoryWithPath = {
+          ...category,
+          path: currentPath.join(' / ')
+        };
+
+        flattened.push(categoryWithPath);
+
+        if (category.children) {
+          flattened = flattened.concat(flattenTree(category.children, currentPath));
+        }
+      });
+
+      return flattened;
+    };
+
+    const flattenedCategories = flattenTree(tree);
+
+    res.json({
+      success: true,
+      data: flattenedCategories
     });
   } catch (err) {
     console.error('查询分类错误:', err);
@@ -963,15 +1089,26 @@ app.get('/api/admin/categories/all', authenticateToken, (req, res) => {
 
 // 创建分类
 app.post('/api/admin/categories', authenticateToken, (req, res) => {
-  const { name, description } = req.body;
+  const { name, description, parent_id } = req.body;
 
   if (!name || !name.trim()) {
     return res.status(400).json({ success: false, message: '分类名称不能为空' });
   }
 
+  // 检查父分类是否存在
+  if (parent_id) {
+    const parentStmt = db.prepare('SELECT id FROM categories WHERE id = ?');
+    const parentResult = parentStmt.get([parent_id]);
+    parentStmt.free();
+
+    if (!parentResult || parentResult.length === 0) {
+      return res.status(400).json({ success: false, message: '父分类不存在' });
+    }
+  }
+
   try {
-    const stmt = db.prepare('INSERT INTO categories (name, description) VALUES (?, ?)');
-    const info = stmt.run([name.trim(), description || '']);
+    const stmt = db.prepare('INSERT INTO categories (name, description, parent_id) VALUES (?, ?, ?)');
+    const info = stmt.run([name.trim(), description || '', parent_id || null]);
     stmt.free();
 
     // 保存数据库
@@ -990,15 +1127,30 @@ app.post('/api/admin/categories', authenticateToken, (req, res) => {
 
 // 更新分类
 app.put('/api/admin/categories/:id', authenticateToken, (req, res) => {
-  const { name, description } = req.body;
+  const { name, description, parent_id } = req.body;
 
   if (!name || !name.trim()) {
     return res.status(400).json({ success: false, message: '分类名称不能为空' });
   }
 
+  // 检查父分类是否存在且不是自己
+  if (parent_id) {
+    if (parseInt(parent_id) === parseInt(req.params.id)) {
+      return res.status(400).json({ success: false, message: '不能将自己设为父分类' });
+    }
+
+    const parentStmt = db.prepare('SELECT id FROM categories WHERE id = ?');
+    const parentResult = parentStmt.get([parent_id]);
+    parentStmt.free();
+
+    if (!parentResult || parentResult.length === 0) {
+      return res.status(400).json({ success: false, message: '父分类不存在' });
+    }
+  }
+
   try {
-    const stmt = db.prepare('UPDATE categories SET name = ?, description = ? WHERE id = ?');
-    stmt.run([name.trim(), description || '', req.params.id]);
+    const stmt = db.prepare('UPDATE categories SET name = ?, description = ?, parent_id = ? WHERE id = ?');
+    stmt.run([name.trim(), description || '', parent_id || null, req.params.id]);
     stmt.free();
 
     // 保存数据库
@@ -1027,9 +1179,9 @@ app.delete('/api/admin/categories/:id', authenticateToken, (req, res) => {
       return res.status(404).json({ success: false, message: '分类不存在' });
     }
 
-    // 检查是否有文章使用该分类
     const category = rowToObject(db.prepare('SELECT * FROM categories WHERE id = ?'), result);
 
+    // 检查是否有文章使用该分类
     const postCountStmt = db.prepare('SELECT COUNT(*) as count FROM posts WHERE category = ?');
     const postCountResult = postCountStmt.get([category.name]);
     const postCountObj = rowToObject(postCountStmt, postCountResult);
@@ -1037,6 +1189,16 @@ app.delete('/api/admin/categories/:id', authenticateToken, (req, res) => {
 
     if (postCountObj.count > 0) {
       return res.status(400).json({ success: false, message: `该分类下还有 ${postCountObj.count} 篇文章，无法删除` });
+    }
+
+    // 检查是否有子分类
+    const childStmt = db.prepare('SELECT COUNT(*) as count FROM categories WHERE parent_id = ?');
+    const childResult = childStmt.get([req.params.id]);
+    const childCountObj = rowToObject(childStmt, childResult);
+    childStmt.free();
+
+    if (childCountObj.count > 0) {
+      return res.status(400).json({ success: false, message: `该分类下还有 ${childCountObj.count} 个子分类，无法删除` });
     }
 
     // 删除分类

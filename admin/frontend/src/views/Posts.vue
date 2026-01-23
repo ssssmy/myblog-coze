@@ -12,14 +12,16 @@
           />
         </el-form-item>
         <el-form-item label="分类">
-          <el-select v-model="searchForm.category" placeholder="选择分类" clearable style="width: 150px">
-            <el-option
-              v-for="category in categories"
-              :key="category.id"
-              :label="category.name"
-              :value="category.name"
-            />
-          </el-select>
+          <el-tree-select
+            v-model="searchForm.category"
+            :data="categories"
+            :props="{ label: 'name', value: 'name' }"
+            placeholder="选择分类"
+            clearable
+            style="width: 200px"
+            check-strictly
+            :render-after-expand="false"
+          />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSearch">搜索</el-button>
@@ -89,7 +91,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Edit, Delete, Download } from '@element-plus/icons-vue'
-import { getPostList, deletePost, batchDeletePosts, exportPosts, getCategories } from '@/api'
+import { getPostList, deletePost, batchDeletePosts, exportPosts, getCategoryTree } from '@/api'
 
 const router = useRouter()
 const tableRef = ref()
@@ -130,8 +132,8 @@ const loadData = async () => {
 // 加载分类
 const loadCategories = async () => {
   try {
-    const res = await getCategories()
-    // 新的 API 返回格式: { success: true, data: [{ id, name }, ...] }
+    const res = await getCategoryTree()
+    // 树形数据直接使用
     categories.value = res.data || []
   } catch (error) {
     console.error('加载分类失败:', error)

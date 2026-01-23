@@ -55,6 +55,11 @@ export const getCategoryList = (params: any) => {
   return request.get('/admin/categories', { params })
 }
 
+// 获取分类树（用于树形展示）
+export const getCategoryTree = () => {
+  return request.get('/admin/categories/tree')
+}
+
 // 创建分类
 export const createCategory = (data: any) => {
   return request.post('/admin/categories', data)

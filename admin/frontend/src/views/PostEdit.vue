@@ -15,19 +15,16 @@
             </el-form-item>
 
             <el-form-item label="文章分类" prop="category">
-              <el-select
+              <el-tree-select
                 v-model="form.category"
+                :data="categoryTreeData"
+                :props="{ label: 'name', value: 'name' }"
                 placeholder="请选择分类"
                 size="large"
                 style="width: 100%"
-              >
-                <el-option
-                  v-for="category in categories"
-                  :key="category.id"
-                  :label="category.name"
-                  :value="category.name"
-                />
-              </el-select>
+                check-strictly
+                :render-after-expand="false"
+              />
             </el-form-item>
 
             <el-form-item label="发布日期" prop="date">
@@ -103,14 +100,14 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import { marked } from 'marked'
-import { getPostDetail, createPost, updatePost, getCategories } from '@/api'
+import { getPostDetail, createPost, updatePost, getCategoryTree } from '@/api'
 
 const router = useRouter()
 const route = useRoute()
 const formRef = ref<FormInstance>()
 const loading = ref(false)
 const activeTab = ref('edit')
-const categories = ref<any[]>([])
+const categoryTreeData = ref<any[]>([])
 
 const isEdit = computed(() => !!route.params.id)
 
@@ -147,9 +144,9 @@ const loadPostDetail = async () => {
 // 加载分类
 const loadCategories = async () => {
   try {
-    const res = await getCategories()
-    // 新的 API 返回格式: { success: true, data: [{ id, name }, ...] }
-    categories.value = res.data || []
+    const res = await getCategoryTree()
+    // 树形数据直接使用
+    categoryTreeData.value = res.data || []
   } catch (error) {
     console.error('加载分类失败:', error)
   }

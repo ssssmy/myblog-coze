@@ -1913,17 +1913,22 @@
             '读书': '📖'
           };
 
-          // 动态生成分类卡片
+          // 渲染分类卡片（只渲染顶级分类）
           categories.forEach(cat => {
             const icon = iconMap[cat.name] || '📂';
             const description = cat.description || `${cat.name}相关内容`;
+            const hasChildren = cat.children && cat.children.length > 0;
+            const childCount = hasChildren ? cat.children.length : 0;
 
-            const cardHTML = `
+            let cardHTML = `
               <div class="category-card" onclick="showPosts('${cat.name}')">
                 <div class="icon-container">${icon}</div>
                 <h3>${cat.name}</h3>
                 <p class="description">${description}</p>
-                <span class="count">${cat.count} 篇文章</span>
+                <div class="category-meta">
+                  <span class="count">${cat.count} 篇文章</span>
+                  ${hasChildren ? `<span class="children-count">${childCount} 个子分类</span>` : ''}
+                </div>
               </div>
             `;
 
