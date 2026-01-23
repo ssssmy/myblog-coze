@@ -32,6 +32,11 @@ router.get('/list', authenticateToken, (req, res) => {
 
   try {
     const blogDb = req.blogDb;
+    if (!blogDb) {
+      console.error('blogDb is undefined!');
+      return res.status(500).json({ success: false, message: '数据库未初始化' });
+    }
+
     let query = 'SELECT * FROM posts WHERE 1=1';
     let params = [];
 
@@ -57,14 +62,19 @@ router.get('/list', authenticateToken, (req, res) => {
     params.push(parseInt(pageSize), offset);
 
     const stmt = blogDb.prepare(query);
-    const result = stmt.all(params);
-    const rows = rowsToObjectArray(stmt, result);
+    stmt.bind(params);
+
+    const result = [];
+    while (stmt.step()) {
+      result.push(stmt.getAsObject());
+    }
+
     stmt.free();
 
     res.json({
       success: true,
       data: {
-        list: rows,
+        list: result,
         total: countObj.total,
         page: parseInt(page),
         pageSize: parseInt(pageSize)
