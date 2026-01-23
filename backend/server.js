@@ -378,10 +378,24 @@ app.get('/api/categories', (req, res) => {
   try {
     const result = db.exec('SELECT DISTINCT category FROM posts ORDER BY category');
     const categories = result.length > 0 ? result[0].values.map(row => row[0]) : [];
-    res.json(categories);
+
+    // 为每个分类添加文章数量统计
+    const categoriesWithCount = categories.map(category => {
+      const stmt = db.prepare('SELECT COUNT(*) as count FROM posts WHERE category = ?');
+      const countResult = stmt.get([category]);
+      const countObj = rowToObject(stmt, countResult);
+      stmt.free();
+
+      return {
+        name: category,
+        count: countObj.count
+      };
+    });
+
+    res.json({ success: true, data: categoriesWithCount });
   } catch (err) {
     console.error('获取分类失败:', err);
-    res.status(500).json({ error: '获取分类失败' });
+    res.status(500).json({ success: false, message: '获取分类失败' });
   }
 });
 
@@ -405,10 +419,10 @@ app.get('/api/posts', (req, res) => {
     }
     stmt.free();
 
-    res.json(result);
+    res.json({ success: true, data: result });
   } catch (err) {
     console.error('获取文章失败:', err);
-    res.status(500).json({ error: '获取文章失败' });
+    res.status(500).json({ success: false, message: '获取文章失败' });
   }
 });
 
@@ -432,10 +446,10 @@ app.get('/api/posts/titles', (req, res) => {
     }
     stmt.free();
 
-    res.json(result);
+    res.json({ success: true, data: result });
   } catch (err) {
     console.error('获取文章失败:', err);
-    res.status(500).json({ error: '获取文章失败' });
+    res.status(500).json({ success: false, message: '获取文章失败' });
   }
 });
 
@@ -448,7 +462,7 @@ app.get('/api/posts/:id', (req, res) => {
     stmt.free();
 
     if (!result || result.length === 0) {
-      return res.status(404).json({ error: '文章不存在' });
+      return res.status(404).json({ success: false, message: '文章不存在' });
     }
 
     // 创建新的 stmt 来获取列名
@@ -456,10 +470,10 @@ app.get('/api/posts/:id', (req, res) => {
     const post = rowToObject(stmt2, result);
     stmt2.free();
 
-    res.json(post);
+    res.json({ success: true, data: post });
   } catch (err) {
     console.error('获取文章详情失败:', err);
-    res.status(500).json({ error: '获取文章详情失败' });
+    res.status(500).json({ success: false, message: '获取文章详情失败' });
   }
 });
 
