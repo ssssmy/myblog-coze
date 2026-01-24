@@ -195,37 +195,14 @@ const getParentName = (parentId: number) => {
   return findParent(treeData.value, parentId)
 }
 
-// 扁平化树形数据用于表格展示
-// Element Plus 树形表格需要扁平的数组，但保留 children 属性用于展示层级
-const flattenTree = (categories: any[]): any[] => {
-  const result: any[] = []
-  
-  const process = (list: any[]) => {
-    list.forEach(item => {
-      const { children, ...rest } = item
-      result.push({
-        ...rest,
-        children: children && children.length > 0 ? children : undefined,
-        hasChildren: children && children.length > 0
-      })
-      
-      if (children && children.length > 0) {
-        process(children)
-      }
-    })
-  }
-  
-  process(categories)
-  return result
-}
-
 // 加载数据
 const loadData = async () => {
   loading.value = true
   try {
     const res = await getCategoryTree()
     treeData.value = res.data || []
-    flatData.value = flattenTree(treeData.value)
+    // 直接使用树形数据，不需要扁平化
+    flatData.value = treeData.value
 
     // 加载所有分类用于父分类选择
     const allRes = await getCategories()
@@ -348,7 +325,7 @@ const handleDialogClose = () => {
 // 搜索功能
 watch(searchKeyword, (val) => {
   if (!val) {
-    flatData.value = flattenTree(treeData.value)
+    flatData.value = treeData.value
     return
   }
 
@@ -381,7 +358,7 @@ watch(searchKeyword, (val) => {
   }
 
   const matchedTree = searchTree(treeData.value)
-  flatData.value = flattenTree(matchedTree)
+  flatData.value = matchedTree
 })
 
 onMounted(() => {
