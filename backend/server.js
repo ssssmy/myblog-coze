@@ -461,17 +461,15 @@ app.get('/api/categories', (req, res) => {
 
         const categoryWithCount = {
           ...category,
-          count: countObj.count || 0
+          count: countObj.count
         };
 
         if (category.children) {
           categoryWithCount.children = countCategories(category.children);
-          // 累加子分类的文章数量到父分类
-          const childrenCount = categoryWithCount.children.reduce(
-            (sum, child) => sum + (child.count || 0),
-            0
+          categoryWithCount.count = category.children.reduce(
+            (sum, child) => sum + child.count,
+            categoryWithCount.count
           );
-          categoryWithCount.count += childrenCount;
         }
 
         return categoryWithCount;
@@ -1042,17 +1040,15 @@ app.get('/api/admin/categories/tree', authenticateToken, (req, res) => {
 
         const categoryWithCount = {
           ...category,
-          post_count: countObj.count || 0
+          post_count: countObj.count
         };
 
         if (category.children) {
           categoryWithCount.children = countCategories(category.children);
-          // 累加子分类的文章数量到父分类
-          const childrenCount = categoryWithCount.children.reduce(
-            (sum, child) => sum + (child.post_count || 0), 
-            0
+          categoryWithCount.post_count = category.children.reduce(
+            (sum, child) => sum + child.post_count, 
+            categoryWithCount.post_count
           );
-          categoryWithCount.post_count += childrenCount;
         }
 
         return categoryWithCount;
