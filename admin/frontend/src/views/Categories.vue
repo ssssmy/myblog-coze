@@ -392,12 +392,6 @@ onMounted(() => {
     cursor: pointer;
     user-select: none;
     padding: 4px 0;
-    border-radius: 4px;
-    transition: background-color 0.2s ease;
-
-    &:hover {
-      background-color: rgba(64, 158, 255, 0.05);
-    }
 
     span {
       font-weight: 500;
