@@ -22,7 +22,6 @@
 
       <!-- 分类树 -->
       <el-table
-        ref="tableRef"
         v-loading="loading"
         :data="flatData"
         row-key="id"
@@ -32,9 +31,9 @@
       >
         <el-table-column prop="name" label="分类名称" min-width="200">
           <template #default="{ row }">
-            <div class="category-name" @click="toggleExpand(row)">
+            <div class="category-name">
               <span>{{ row.name }}</span>
-              <el-tag v-if="row.parent_id" size="small" type="info" style="margin-left: 8px" @click.stop>
+              <el-tag v-if="row.parent_id" size="small" type="info" style="margin-left: 8px">
                 子分类
               </el-tag>
             </div>
@@ -53,13 +52,13 @@
         </el-table-column>
         <el-table-column label="操作" width="250" fixed="right">
           <template #default="{ row }">
-            <el-button type="primary" link :icon="Plus" @click.stop="handleCreateChild(row)">
+            <el-button type="primary" link :icon="Plus" @click="handleCreateChild(row)">
               添加子分类
             </el-button>
-            <el-button type="primary" link :icon="Edit" @click.stop="handleEdit(row)">
+            <el-button type="primary" link :icon="Edit" @click="handleEdit(row)">
               编辑
             </el-button>
-            <el-button type="danger" link :icon="Delete" @click.stop="handleDelete(row)">
+            <el-button type="danger" link :icon="Delete" @click="handleDelete(row)">
               删除
             </el-button>
           </template>
@@ -131,7 +130,6 @@ import { Plus, Edit, Delete, Search } from '@element-plus/icons-vue'
 import { getCategoryTree, getCategoryList, createCategory, updateCategory, deleteCategory, getCategories } from '@/api'
 
 const formRef = ref<FormInstance>()
-const tableRef = ref()
 const loading = ref(false)
 const saving = ref(false)
 const dialogVisible = ref(false)
@@ -225,17 +223,6 @@ const handleExpandChange = (row: any, expanded: boolean) => {
     if (index > -1) {
       expandedKeys.value.splice(index, 1)
     }
-  }
-}
-
-// 切换展开状态（点击分类名称时触发）
-const toggleExpand = (row: any) => {
-  if (!row.children || row.children.length === 0) {
-    return // 没有子分类时不需要展开
-  }
-
-  if (tableRef.value) {
-    tableRef.value.toggleRowExpansion(row)
   }
 }
 
@@ -388,16 +375,10 @@ onMounted(() => {
   .category-name {
     display: flex;
     align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    user-select: none;
-    padding: 4px 0;
 
     span {
       font-weight: 500;
       font-size: 14px;
-      line-height: 1.5;
-      vertical-align: middle;
     }
   }
 
@@ -405,18 +386,14 @@ onMounted(() => {
   :deep(.el-table__expand-icon) {
     color: #909399;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    margin: 0;
-    padding: 6px;
+    margin-right: 4px;
+    padding: 4px;
     border-radius: 4px;
     cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    vertical-align: middle;
-    line-height: 1;
 
     &:hover {
       color: #409eff;
+      background-color: rgba(64, 158, 255, 0.1);
       transform: scale(1.15);
     }
 
@@ -433,19 +410,6 @@ onMounted(() => {
       font-size: 14px;
       font-weight: 600;
       display: block;
-    }
-  }
-
-  // 确保第一列单元格内容垂直居中
-  :deep(.el-table td.el-table__cell) {
-    vertical-align: middle;
-
-    &:first-child {
-      .cell {
-        display: flex;
-        align-items: center;
-        line-height: 1.5;
-      }
     }
   }
 
