@@ -22,25 +22,21 @@
 
       <!-- 分类树 -->
       <el-table
+        ref="tableRef"
         v-loading="loading"
         :data="flatData"
         row-key="id"
         :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
         :expand-row-keys="expandedKeys"
-        :default-expand-all="true"
         @expand-change="handleExpandChange"
-        @row-click="handleRowClick"
       >
         <el-table-column prop="name" label="分类名称" min-width="200">
           <template #default="{ row }">
-            <div class="category-name" :class="{ 'clickable': row.hasChildren }">
+            <div class="category-name" @click="toggleExpand(row)">
               <span>{{ row.name }}</span>
-              <el-tag v-if="row.parent_id" size="small" type="info" style="margin-left: 8px">
+              <el-tag v-if="row.parent_id" size="small" type="info" style="margin-left: 8px" @click.stop>
                 子分类
               </el-tag>
-              <el-icon v-if="row.hasChildren" class="expand-hint" :size="14" style="margin-left: 6px">
-                <component :is="expandedKeys.includes(row.id) ? ArrowDown : ArrowRight" />
-              </el-icon>
             </div>
           </template>
         </el-table-column>
@@ -131,10 +127,11 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
-import { Plus, Edit, Delete, Search, ArrowDown, ArrowRight } from '@element-plus/icons-vue'
+import { Plus, Edit, Delete, Search } from '@element-plus/icons-vue'
 import { getCategoryTree, getCategoryList, createCategory, updateCategory, deleteCategory, getCategories } from '@/api'
 
 const formRef = ref<FormInstance>()
+const tableRef = ref()
 const loading = ref(false)
 const saving = ref(false)
 const dialogVisible = ref(false)
@@ -200,37 +197,14 @@ const getParentName = (parentId: number) => {
   return findParent(treeData.value, parentId)
 }
 
-// 扁平化树形数据用于表格展示
-// Element Plus 树形表格需要扁平的数组，但保留 children 属性用于展示层级
-const flattenTree = (categories: any[]): any[] => {
-  const result: any[] = []
-  
-  const process = (list: any[]) => {
-    list.forEach(item => {
-      const { children, ...rest } = item
-      result.push({
-        ...rest,
-        children: children && children.length > 0 ? children : undefined,
-        hasChildren: children && children.length > 0
-      })
-      
-      if (children && children.length > 0) {
-        process(children)
-      }
-    })
-  }
-  
-  process(categories)
-  return result
-}
-
 // 加载数据
 const loadData = async () => {
   loading.value = true
   try {
     const res = await getCategoryTree()
     treeData.value = res.data || []
-    flatData.value = flattenTree(treeData.value)
+    // 直接使用树形数据，不需要扁平化
+    flatData.value = treeData.value
 
     // 加载所有分类用于父分类选择
     const allRes = await getCategories()
@@ -254,15 +228,14 @@ const handleExpandChange = (row: any, expanded: boolean) => {
   }
 }
 
-// 点击行触发展开/折叠
-const handleRowClick = (row: any) => {
-  if (row.hasChildren) {
-    const index = expandedKeys.value.indexOf(row.id)
-    if (index > -1) {
-      expandedKeys.value.splice(index, 1)
-    } else {
-      expandedKeys.value.push(row.id)
-    }
+// 切换展开状态（点击分类名称时触发）
+const toggleExpand = (row: any) => {
+  if (!row.children || row.children.length === 0) {
+    return // 没有子分类时不需要展开
+  }
+
+  if (tableRef.value) {
+    tableRef.value.toggleRowExpansion(row)
   }
 }
 
@@ -365,7 +338,7 @@ const handleDialogClose = () => {
 // 搜索功能
 watch(searchKeyword, (val) => {
   if (!val) {
-    flatData.value = flattenTree(treeData.value)
+    flatData.value = treeData.value
     return
   }
 
@@ -398,7 +371,7 @@ watch(searchKeyword, (val) => {
   }
 
   const matchedTree = searchTree(treeData.value)
-  flatData.value = flattenTree(matchedTree)
+  flatData.value = matchedTree
 })
 
 onMounted(() => {
@@ -415,31 +388,100 @@ onMounted(() => {
   .category-name {
     display: flex;
     align-items: center;
-    cursor: default;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+    padding: 4px 0;
 
-    &.clickable {
-      cursor: pointer;
-      user-select: none;
-      transition: all 0.2s;
-
-      &:hover {
-        color: #409eff;
-
-        .expand-hint {
-          opacity: 1;
-        }
-      }
-    }
-
-    .expand-hint {
-      opacity: 0.6;
-      transition: opacity 0.2s;
+    span {
+      font-weight: 500;
+      font-size: 14px;
+      line-height: 1.5;
+      vertical-align: middle;
     }
   }
-}
 
-// 让表格行可点击，增加视觉反馈
-:deep(.el-table__row) {
-  cursor: pointer;
+  // 优化树形表格展开/折叠图标样式
+  :deep(.el-table__expand-icon) {
+    color: #909399;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    margin: 0;
+    padding: 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    line-height: 1;
+
+    &:hover {
+      color: #409eff;
+      transform: scale(1.15);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    &.el-table__expand-icon--expanded {
+      color: #409eff;
+      transform: rotate(90deg) scale(1.1);
+    }
+
+    svg {
+      font-size: 14px;
+      font-weight: 600;
+      display: block;
+    }
+  }
+
+  // 确保第一列单元格内容垂直居中
+  :deep(.el-table td.el-table__cell) {
+    vertical-align: middle;
+
+    &:first-child {
+      .cell {
+        display: flex;
+        align-items: center;
+        line-height: 1.5;
+      }
+    }
+  }
+
+  // 优化表格行样式
+  :deep(.el-table__row) {
+    transition: background-color 0.2s ease;
+
+    &:hover > td {
+      background-color: #f5f7fa !important;
+    }
+
+    // 子分类行的背景色调整
+    &[class*='el-table__row--level-1'] {
+      background-color: #fafafa;
+    }
+
+    &[class*='el-table__row--level-2'] {
+      background-color: #f5f5f5;
+    }
+
+    // 缩进样式
+    .el-table__indent {
+      padding-left: 0 !important;
+    }
+  }
+
+  // 展开状态的单元格
+  :deep(.el-table__expanded-cell) {
+    padding: 0 !important;
+    background-color: transparent !important;
+  }
+
+  // 优化文章数量标签
+  :deep(.el-tag) {
+    font-weight: 500;
+    letter-spacing: 0.5px;
+  }
 }
 </style>
