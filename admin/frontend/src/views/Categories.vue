@@ -22,6 +22,7 @@
 
       <!-- 分类树 -->
       <el-table
+        ref="tableRef"
         v-loading="loading"
         :data="flatData"
         row-key="id"
@@ -130,6 +131,7 @@ import { Plus, Edit, Delete, Search } from '@element-plus/icons-vue'
 import { getCategoryTree, getCategoryList, createCategory, updateCategory, deleteCategory, getCategories } from '@/api'
 
 const formRef = ref<FormInstance>()
+const tableRef = ref()
 const loading = ref(false)
 const saving = ref(false)
 const dialogVisible = ref(false)
@@ -232,11 +234,8 @@ const toggleExpand = (row: any) => {
     return // 没有子分类时不需要展开
   }
 
-  const index = expandedKeys.value.indexOf(row.id)
-  if (index > -1) {
-    expandedKeys.value.splice(index, 1)
-  } else {
-    expandedKeys.value.push(row.id)
+  if (tableRef.value) {
+    tableRef.value.toggleRowExpansion(row)
   }
 }
 
