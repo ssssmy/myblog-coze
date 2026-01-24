@@ -375,6 +375,77 @@ onMounted(() => {
   .category-name {
     display: flex;
     align-items: center;
+
+    span {
+      font-weight: 500;
+      font-size: 14px;
+    }
+  }
+
+  // 优化树形表格展开/折叠图标样式
+  :deep(.el-table__expand-icon) {
+    color: #909399;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-right: 4px;
+    padding: 4px;
+    border-radius: 4px;
+    cursor: pointer;
+
+    &:hover {
+      color: #409eff;
+      background-color: rgba(64, 158, 255, 0.1);
+      transform: scale(1.15);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    &.el-table__expand-icon--expanded {
+      color: #409eff;
+      transform: rotate(90deg) scale(1.1);
+    }
+
+    svg {
+      font-size: 14px;
+      font-weight: 600;
+      display: block;
+    }
+  }
+
+  // 优化表格行样式
+  :deep(.el-table__row) {
+    transition: background-color 0.2s ease;
+
+    &:hover > td {
+      background-color: #f5f7fa !important;
+    }
+
+    // 子分类行的背景色调整
+    &[class*='el-table__row--level-1'] {
+      background-color: #fafafa;
+    }
+
+    &[class*='el-table__row--level-2'] {
+      background-color: #f5f5f5;
+    }
+
+    // 缩进样式
+    .el-table__indent {
+      padding-left: 0 !important;
+    }
+  }
+
+  // 展开状态的单元格
+  :deep(.el-table__expanded-cell) {
+    padding: 0 !important;
+    background-color: transparent !important;
+  }
+
+  // 优化文章数量标签
+  :deep(.el-tag) {
+    font-weight: 500;
+    letter-spacing: 0.5px;
   }
 }
 </style>
