@@ -1181,8 +1181,30 @@ app.put('/api/admin/categories/:id', authenticateToken, (req, res) => {
   }
 
   try {
+    // 获取旧分类名称
+    const oldCategoryStmt = db.prepare('SELECT name FROM categories WHERE id = ?');
+    const oldCategoryResult = oldCategoryStmt.get([req.params.id]);
+    oldCategoryStmt.free();
+
+    // sql.js 的 get 方法返回的是数组 [name] 或对象 {name: ...}
+    const oldCategoryName = Array.isArray(oldCategoryResult) ? oldCategoryResult[0] : oldCategoryResult?.name;
+
+    const newName = name.trim();
+    console.log(`📝 更新分类: ID=${req.params.id}, 旧名称="${oldCategoryName}", 新名称="${newName}"`);
+
+    // 如果分类名称发生变化，同步更新文章表中的分类名称
+    if (oldCategoryName && oldCategoryName !== newName) {
+      // 先更新文章表
+      const updatePostsStmt = db.prepare('UPDATE posts SET category = ? WHERE category = ?');
+      updatePostsStmt.run([newName, oldCategoryName]);
+      updatePostsStmt.free();
+
+      console.log(`✅ 已更新文章表，将分类从 "${oldCategoryName}" 更新为 "${newName}"`);
+    }
+
+    // 更新分类
     const stmt = db.prepare('UPDATE categories SET name = ?, description = ?, parent_id = ? WHERE id = ?');
-    stmt.run([name.trim(), description || '', parent_id || null, req.params.id]);
+    stmt.run([newName, description || '', parent_id || null, req.params.id]);
     stmt.free();
 
     // 保存数据库
