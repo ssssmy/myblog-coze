@@ -375,10 +375,13 @@ onMounted(() => {
   .category-name {
     display: flex;
     align-items: center;
+    gap: 8px;
 
     span {
       font-weight: 500;
       font-size: 14px;
+      line-height: 1.5;
+      vertical-align: middle;
     }
   }
 
@@ -386,10 +389,15 @@ onMounted(() => {
   :deep(.el-table__expand-icon) {
     color: #909399;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    margin-right: 4px;
-    padding: 4px;
+    margin: 0;
+    padding: 6px;
     border-radius: 4px;
     cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    line-height: 1;
 
     &:hover {
       color: #409eff;
@@ -410,6 +418,19 @@ onMounted(() => {
       font-size: 14px;
       font-weight: 600;
       display: block;
+    }
+  }
+
+  // 确保第一列单元格内容垂直居中
+  :deep(.el-table td.el-table__cell) {
+    vertical-align: middle;
+
+    &:first-child {
+      .cell {
+        display: flex;
+        align-items: center;
+        line-height: 1.5;
+      }
     }
   }
 
