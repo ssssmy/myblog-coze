@@ -6,6 +6,16 @@
         <el-form-item>
           <el-button type="primary" :icon="Plus" @click="handleCreate">新建根分类</el-button>
         </el-form-item>
+        <el-form-item>
+          <el-button 
+            type="danger" 
+            :icon="Delete" 
+            :disabled="selectedCategories.length === 0"
+            @click="handleBatchDelete"
+          >
+            批量删除 ({{ selectedCategories.length }})
+          </el-button>
+        </el-form-item>
         <el-form-item style="float: right">
           <el-input
             v-model="searchKeyword"
@@ -29,7 +39,9 @@
         :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
         :expand-row-keys="expandedKeys"
         @expand-change="handleExpandChange"
+        @selection-change="handleSelectionChange"
       >
+        <el-table-column type="selection" width="55" :reserve-selection="true" />
         <el-table-column prop="name" label="分类名称" min-width="200">
           <template #default="{ row }">
             <div class="category-name" @click="toggleExpand(row)">
@@ -139,6 +151,7 @@ const treeData = ref<any[]>([])
 const flatData = ref<any[]>([])
 const parentOptions = ref<any[]>([])
 const expandedKeys = ref<number[]>([])
+const selectedCategories = ref<any[]>([])
 const currentEditId = ref<number | null>(null)
 const currentParentId = ref<number | null>(null)
 const searchKeyword = ref('')
@@ -289,6 +302,54 @@ const handleDelete = async (row: any) => {
     if (error !== 'cancel') {
       console.error('删除失败:', error)
       ElMessage.error(error.response?.data?.message || '删除失败')
+    }
+  }
+}
+
+// 处理选择变化
+const handleSelectionChange = (selection: any[]) => {
+  selectedCategories.value = selection
+}
+
+// 批量删除
+const handleBatchDelete = async () => {
+  if (selectedCategories.value.length === 0) {
+    ElMessage.warning('请先选择要删除的分类')
+    return
+  }
+
+  try {
+    await ElMessageBox.confirm(
+      `确定要删除选中的 ${selectedCategories.value.length} 个分类吗？`,
+      '批量删除',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+
+    // 收集所有分类ID（包括子分类）
+    const allIds = new Set<number>()
+    const collectIds = (categories: any[]) => {
+      categories.forEach(cat => {
+        allIds.add(cat.id)
+        if (cat.children) {
+          collectIds(cat.children)
+        }
+      })
+    }
+    collectIds(selectedCategories.value)
+
+    await deleteCategory(Array.from(allIds))
+    ElMessage.success(`成功删除 ${allIds.size} 个分类`)
+    selectedCategories.value = []
+    tableRef.value?.clearSelection()
+    loadData()
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      console.error('批量删除失败:', error)
+      ElMessage.error(error.response?.data?.message || '批量删除失败')
     }
   }
 }

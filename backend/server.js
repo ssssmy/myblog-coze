@@ -1270,6 +1270,91 @@ app.delete('/api/admin/categories/:id', authenticateToken, (req, res) => {
   }
 });
 
+// 批量删除分类
+app.post('/api/admin/categories/batch-delete', authenticateToken, (req, res) => {
+  const { ids } = req.body;
+
+  if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ success: false, message: '请选择要删除的分类' });
+  }
+
+  try {
+    // 检查每个分类是否可以删除
+    const undeletableCategories = [];
+
+    for (const id of ids) {
+      // 检查分类是否存在
+      const categoryStmt = db.prepare('SELECT * FROM categories WHERE id = ?');
+      const categoryResult = categoryStmt.get([id]);
+
+      if (!categoryResult || categoryResult.length === 0) {
+        categoryStmt.free();
+        continue; // 分类不存在，跳过
+      }
+
+      const category = rowToObject(categoryStmt, categoryResult);
+      categoryStmt.free();
+
+      // 检查是否有文章使用该分类
+      const postCountStmt = db.prepare('SELECT COUNT(*) as count FROM posts WHERE category = ?');
+      const postCountResult = postCountStmt.get([category.name]);
+      const postCountObj = rowToObject(postCountStmt, postCountResult);
+      postCountStmt.free();
+
+      if (postCountObj.count > 0) {
+        undeletableCategories.push({
+          name: category.name,
+          reason: `该分类下还有 ${postCountObj.count} 篇文章`
+        });
+        continue;
+      }
+
+      // 检查是否有子分类
+      const childStmt = db.prepare('SELECT COUNT(*) as count FROM categories WHERE parent_id = ?');
+      const childResult = childStmt.get([id]);
+      const childCountObj = rowToObject(childStmt, childResult);
+      childStmt.free();
+
+      if (childCountObj.count > 0) {
+        undeletableCategories.push({
+          name: category.name,
+          reason: `该分类下还有 ${childCountObj.count} 个子分类`
+        });
+        continue;
+      }
+    }
+
+    if (undeletableCategories.length > 0) {
+      const message = undeletableCategories
+        .map(cat => `"${cat.name}" ${cat.reason}`)
+        .join('；');
+      return res.status(400).json({ success: false, message: `无法删除：${message}` });
+    }
+
+    // 执行批量删除（逐个删除）
+    let deletedCount = 0;
+    for (const id of ids) {
+      const deleteStmt = db.prepare('DELETE FROM categories WHERE id = ?');
+      const result = deleteStmt.run([id]);
+      if (result) {
+        deletedCount += 1;
+      }
+      deleteStmt.free();
+    }
+
+    // 保存数据库
+    saveDatabase();
+
+    res.json({
+      success: true,
+      message: `成功删除 ${deletedCount} 个分类`
+    });
+  } catch (err) {
+    console.error('批量删除分类错误:', err);
+    res.status(500).json({ success: false, message: '批量删除失败' });
+  }
+});
+
 // 导出文章为 Excel
 app.get('/api/admin/posts/export/excel', authenticateToken, (req, res) => {
   try {

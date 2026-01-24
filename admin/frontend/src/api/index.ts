@@ -70,8 +70,11 @@ export const updateCategory = (id: number, data: any) => {
   return request.put(`/admin/categories/${id}`, data)
 }
 
-// 删除分类
-export const deleteCategory = (id: number) => {
+// 删除分类（支持单个或批量删除）
+export const deleteCategory = (id: number | number[]) => {
+  if (Array.isArray(id)) {
+    return request.post('/admin/categories/batch-delete', { ids: id })
+  }
   return request.delete(`/admin/categories/${id}`)
 }
 
