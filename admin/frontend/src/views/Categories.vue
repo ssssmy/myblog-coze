@@ -27,7 +27,6 @@
         row-key="id"
         :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
         :expand-row-keys="expandedKeys"
-        :default-expand-all="true"
         @expand-change="handleExpandChange"
         @row-click="handleRowClick"
       >
@@ -38,9 +37,8 @@
               <el-tag v-if="row.parent_id" size="small" type="info" style="margin-left: 8px">
                 子分类
               </el-tag>
-              <el-icon v-if="row.hasChildren" class="expand-hint" :size="14" style="margin-left: 6px">
-                <component :is="expandedKeys.includes(row.id) ? ArrowDown : ArrowRight" />
-              </el-icon>
+              <ArrowDown v-if="row.hasChildren && expandedKeys.includes(row.id)" class="expand-hint" :size="14" style="margin-left: 6px" />
+              <ArrowRight v-if="row.hasChildren && !expandedKeys.includes(row.id)" class="expand-hint" :size="14" style="margin-left: 6px" />
             </div>
           </template>
         </el-table-column>
@@ -231,6 +229,19 @@ const loadData = async () => {
     const res = await getCategoryTree()
     treeData.value = res.data || []
     flatData.value = flattenTree(treeData.value)
+
+    // 默认展开所有节点
+    const getAllParentIds = (categories: any[]): number[] => {
+      let ids: number[] = []
+      categories.forEach(cat => {
+        if (cat.children && cat.children.length > 0) {
+          ids.push(cat.id)
+          ids = ids.concat(getAllParentIds(cat.children))
+        }
+      })
+      return ids
+    }
+    expandedKeys.value = getAllParentIds(treeData.value)
 
     // 加载所有分类用于父分类选择
     const allRes = await getCategories()
