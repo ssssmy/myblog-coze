@@ -88,7 +88,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onServerPrefetch } from 'vue';
 import { RouterLink } from 'vue-router';
 
 interface Category {
@@ -108,11 +108,15 @@ const loading = ref(false);
 const loadCategories = async () => {
   try {
     loading.value = true;
+    console.log('开始加载分类数据...');
     const response = await fetch('http://localhost:3001/api/categories');
     const result = await response.json();
     
+    console.log('分类数据响应:', result);
+    
     if (result.success) {
       categories.value = result.data;
+      console.log('分类数据已加载:', categories.value);
     }
   } catch (error) {
     console.error('加载分类失败:', error);
@@ -123,15 +127,18 @@ const loadCategories = async () => {
 
 // 鼠标进入处理
 const handleMouseEnter = (categoryId: number) => {
+  console.log('鼠标进入分类:', categoryId);
   expandedCategories.value.add(categoryId);
 };
 
 // 鼠标离开处理
 const handleMouseLeave = (categoryId: number) => {
+  console.log('鼠标离开分类:', categoryId);
   expandedCategories.value.delete(categoryId);
 };
 
 onMounted(() => {
+  console.log('Header 组件已挂载');
   loadCategories();
 });
 </script>
