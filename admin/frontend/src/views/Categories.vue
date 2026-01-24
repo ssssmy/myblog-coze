@@ -465,11 +465,6 @@ onMounted(() => {
     &[class*='el-table__row--level-2'] {
       background-color: #f5f5f5;
     }
-
-    // 缩进样式
-    .el-table__indent {
-      padding-left: 0 !important;
-    }
   }
 
   // 展开状态的单元格
