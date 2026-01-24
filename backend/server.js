@@ -1157,6 +1157,80 @@ app.post('/api/admin/categories', authenticateToken, (req, res) => {
   }
 });
 
+// 批量添加分类
+app.post('/api/admin/categories/batch-create', authenticateToken, (req, res) => {
+  const { categories } = req.body;
+
+  if (!categories || !Array.isArray(categories) || categories.length === 0) {
+    return res.status(400).json({ success: false, message: '请提供要添加的分类列表' });
+  }
+
+  try {
+    const results = [];
+    const errors = [];
+
+    for (let i = 0; i < categories.length; i++) {
+      const { name, description, parent_id } = categories[i];
+
+      // 验证分类名称
+      if (!name || !name.trim()) {
+        errors.push(`第 ${i + 1} 个分类：名称不能为空`);
+        continue;
+      }
+
+      // 检查父分类是否存在
+      if (parent_id) {
+        const parentStmt = db.prepare('SELECT id FROM categories WHERE id = ?');
+        const parentResult = parentStmt.get([parent_id]);
+        parentStmt.free();
+
+        if (!parentResult || parentResult.length === 0) {
+          errors.push(`第 ${i + 1} 个分类（${name}）：父分类不存在`);
+          continue;
+        }
+      }
+
+      try {
+        const stmt = db.prepare('INSERT INTO categories (name, description, parent_id) VALUES (?, ?, ?)');
+        const info = stmt.run([name.trim(), description || '', parent_id || null]);
+        stmt.free();
+
+        results.push({
+          index: i,
+          name: name,
+          id: info.lastInsertRowid,
+          success: true
+        });
+      } catch (err) {
+        if (err.message.includes('UNIQUE')) {
+          errors.push(`第 ${i + 1} 个分类（${name}）：分类名称已存在`);
+        } else {
+          errors.push(`第 ${i + 1} 个分类（${name}）：${err.message}`);
+        }
+      }
+    }
+
+    // 保存数据库
+    if (results.length > 0) {
+      saveDatabase();
+    }
+
+    res.json({
+      success: true,
+      message: `成功添加 ${results.length} 个分类`,
+      data: {
+        successCount: results.length,
+        failCount: errors.length,
+        results,
+        errors: errors.length > 0 ? errors : undefined
+      }
+    });
+  } catch (err) {
+    console.error('批量添加分类错误:', err);
+    res.status(500).json({ success: false, message: '批量添加失败: ' + err.message });
+  }
+});
+
 // 更新分类
 app.put('/api/admin/categories/:id', authenticateToken, (req, res) => {
   const { name, description, parent_id } = req.body;

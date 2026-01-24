@@ -7,9 +7,14 @@
           <el-button type="primary" :icon="Plus" @click="handleCreate">新建根分类</el-button>
         </el-form-item>
         <el-form-item>
-          <el-button 
-            type="danger" 
-            :icon="Delete" 
+          <el-button type="success" :icon="Plus" @click="handleBatchCreate">
+            批量添加
+          </el-button>
+        </el-form-item>
+        <el-form-item>
+          <el-button
+            type="danger"
+            :icon="Delete"
             :disabled="selectedCategories.length === 0"
             @click="handleBatchDelete"
           >
@@ -133,6 +138,71 @@
         </el-button>
       </template>
     </el-dialog>
+
+    <!-- 批量添加对话框 -->
+    <el-dialog
+      v-model="batchDialogVisible"
+      title="批量添加分类"
+      width="800px"
+      @close="handleBatchDialogClose"
+    >
+      <el-form :model="batchForm" label-width="100px">
+        <el-form-item label="父分类">
+          <el-select
+            v-model="batchForm.parent_id"
+            placeholder="不选择则创建根分类"
+            clearable
+            style="width: 100%"
+          >
+            <el-option
+              v-for="category in parentOptions"
+              :key="category.id"
+              :label="category.name"
+              :value="category.id"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="分类列表">
+          <div class="batch-input-container">
+            <div
+              v-for="(item, index) in batchForm.categories"
+              :key="index"
+              class="batch-item"
+            >
+              <el-input
+                v-model="item.name"
+                placeholder="分类名称"
+                style="width: 200px; margin-right: 10px"
+                maxlength="50"
+              />
+              <el-input
+                v-model="item.description"
+                placeholder="描述（可选）"
+                style="width: 300px; margin-right: 10px"
+                maxlength="200"
+              />
+              <el-button
+                type="danger"
+                :icon="Delete"
+                circle
+                size="small"
+                @click="removeBatchItem(index)"
+                :disabled="batchForm.categories.length <= 1"
+              />
+            </div>
+            <el-button type="primary" :icon="Plus" @click="addBatchItem" style="margin-top: 10px">
+              添加分类
+            </el-button>
+          </div>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="batchDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleBatchSave" :loading="batchSaving">
+          批量添加
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -140,13 +210,15 @@
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import { Plus, Edit, Delete, Search } from '@element-plus/icons-vue'
-import { getCategoryTree, getCategoryList, createCategory, updateCategory, deleteCategory, getCategories } from '@/api'
+import { getCategoryTree, getCategoryList, createCategory, updateCategory, deleteCategory, getCategories, batchCreateCategories } from '@/api'
 
 const formRef = ref<FormInstance>()
 const tableRef = ref()
 const loading = ref(false)
 const saving = ref(false)
 const dialogVisible = ref(false)
+const batchDialogVisible = ref(false)
+const batchSaving = ref(false)
 const treeData = ref<any[]>([])
 const flatData = ref<any[]>([])
 const parentOptions = ref<any[]>([])
@@ -160,6 +232,13 @@ const form = reactive({
   parent_id: null as number | null,
   name: '',
   description: ''
+})
+
+const batchForm = reactive({
+  parent_id: null as number | null,
+  categories: [
+    { name: '', description: '' }
+  ]
 })
 
 const showParentSelect = computed(() => {
@@ -396,6 +475,72 @@ const handleDialogClose = () => {
   form.parent_id = null
 }
 
+// 批量添加相关方法
+const handleBatchCreate = () => {
+  batchForm.parent_id = null
+  batchForm.categories = [{ name: '', description: '' }]
+  batchDialogVisible.value = true
+}
+
+const addBatchItem = () => {
+  batchForm.categories.push({ name: '', description: '' })
+}
+
+const removeBatchItem = (index: number) => {
+  if (batchForm.categories.length > 1) {
+    batchForm.categories.splice(index, 1)
+  }
+}
+
+const handleBatchDialogClose = () => {
+  batchForm.parent_id = null
+  batchForm.categories = [{ name: '', description: '' }]
+}
+
+const handleBatchSave = async () => {
+  // 验证所有分类名称都不为空
+  const emptyIndex = batchForm.categories.findIndex(item => !item.name || !item.name.trim())
+  if (emptyIndex !== -1) {
+    ElMessage.warning(`第 ${emptyIndex + 1} 个分类名称不能为空`)
+    return
+  }
+
+  // 验证分类名称不重复
+  const names = batchForm.categories.map(item => item.name.trim())
+  const uniqueNames = new Set(names)
+  if (names.length !== uniqueNames.size) {
+    ElMessage.warning('分类名称不能重复')
+    return
+  }
+
+  batchSaving.value = true
+  try {
+    const categories = batchForm.categories.map(item => ({
+      name: item.name.trim(),
+      description: item.description.trim(),
+      parent_id: batchForm.parent_id
+    }))
+
+    const res = await batchCreateCategories({ categories })
+    const { successCount, failCount, errors } = res.data
+
+    if (failCount > 0) {
+      ElMessage.warning(`成功添加 ${successCount} 个分类，失败 ${failCount} 个`)
+      console.error('批量添加错误:', errors)
+    } else {
+      ElMessage.success(`成功添加 ${successCount} 个分类`)
+    }
+
+    batchDialogVisible.value = false
+    loadData()
+  } catch (error: any) {
+    console.error('批量添加失败:', error)
+    ElMessage.error(error.response?.data?.message || '批量添加失败')
+  } finally {
+    batchSaving.value = false
+  }
+}
+
 // 搜索功能
 watch(searchKeyword, (val) => {
   if (!val) {
@@ -538,6 +683,18 @@ onMounted(() => {
   :deep(.el-tag) {
     font-weight: 500;
     letter-spacing: 0.5px;
+  }
+
+  // 批量添加样式
+  .batch-input-container {
+    max-height: 400px;
+    overflow-y: auto;
+
+    .batch-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
   }
 }
 </style>

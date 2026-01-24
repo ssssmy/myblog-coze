@@ -65,6 +65,11 @@ export const createCategory = (data: any) => {
   return request.post('/admin/categories', data)
 }
 
+// 批量添加分类
+export const batchCreateCategories = (data: { categories: any[] }) => {
+  return request.post('/admin/categories/batch-create', data)
+}
+
 // 更新分类
 export const updateCategory = (id: number, data: any) => {
   return request.put(`/admin/categories/${id}`, data)
