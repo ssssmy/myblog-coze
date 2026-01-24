@@ -42,32 +42,33 @@
           <!-- 子分类下拉菜单 -->
           <div
             v-if="category.children && category.children.length > 0"
-            class="absolute left-0 mt-0 w-48 bg-white rounded-lg shadow-lg border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50"
+            class="absolute left-0 top-full mt-1 w-56 bg-white rounded-lg shadow-xl border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[100]"
           >
             <div class="py-2">
-              <RouterLink
-                v-for="child in category.children"
-                :key="child.id"
-                :to="`/category/${encodeURIComponent(child.name)}`"
-                class="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-              >
-                <div class="flex items-center justify-between">
-                  <span>{{ child.name }}</span>
-                  <span v-if="child.count !== undefined" class="text-xs text-gray-400">
-                    {{ child.count }}
-                  </span>
-                </div>
+              <template v-for="child in category.children" :key="child.id">
+                <!-- 二级分类 -->
+                <RouterLink
+                  :to="`/category/${encodeURIComponent(child.name)}`"
+                  class="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                >
+                  <div class="flex items-center justify-between">
+                    <span class="font-medium">{{ child.name }}</span>
+                    <span v-if="child.count !== undefined" class="text-xs text-gray-400">
+                      {{ child.count }}
+                    </span>
+                  </div>
+                </RouterLink>
                 
                 <!-- 三级分类 -->
                 <div
                   v-if="child.children && child.children.length > 0"
-                  class="ml-4 mt-1 pt-1 border-t border-gray-100"
+                  class="bg-gray-50"
                 >
                   <RouterLink
                     v-for="grandchild in child.children"
                     :key="grandchild.id"
                     :to="`/category/${encodeURIComponent(grandchild.name)}`"
-                    class="block px-4 py-2 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                    class="block px-8 py-2 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-colors"
                   >
                     <div class="flex items-center justify-between">
                       <span>{{ grandchild.name }}</span>
@@ -77,7 +78,7 @@
                     </div>
                   </RouterLink>
                 </div>
-              </RouterLink>
+              </template>
             </div>
           </div>
         </div>
