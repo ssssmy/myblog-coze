@@ -903,7 +903,8 @@ app.post('/api/admin/posts/batch-delete', authenticateToken, (req, res) => {
 // 获取所有分类（管理后台）
 app.get('/api/admin/posts/categories/all', authenticateToken, (req, res) => {
   try {
-    const stmt = db.prepare('SELECT id, name FROM categories ORDER BY name');
+    // 获取所有分类并构建树形结构
+    const stmt = db.prepare('SELECT id, name, parent_id FROM categories ORDER BY id');
     stmt.bind([]);
 
     const result = [];
@@ -912,9 +913,36 @@ app.get('/api/admin/posts/categories/all', authenticateToken, (req, res) => {
     }
     stmt.free();
 
+    // 构建树形结构
+    const tree = buildCategoryTree(result);
+
+    // 扁平化树形结构，添加路径信息
+    const flattenTree = (categories, path = []) => {
+      let flattened = [];
+
+      categories.forEach(category => {
+        const currentPath = [...path, category.name];
+        const fullPath = currentPath.join(' > ');
+
+        flattened.push({
+          id: category.id,
+          name: category.name,
+          path: fullPath
+        });
+
+        if (category.children && category.children.length > 0) {
+          flattened = flattened.concat(flattenTree(category.children, currentPath));
+        }
+      });
+
+      return flattened;
+    };
+
+    const flattened = flattenTree(tree);
+
     res.json({
       success: true,
-      data: result
+      data: flattened
     });
   } catch (err) {
     console.error('查询分类错误:', err);

@@ -42,7 +42,7 @@
         <el-table-column prop="description" label="描述" min-width="250" show-overflow-tooltip />
         <el-table-column prop="post_count" label="文章数量" width="100" align="center">
           <template #default="{ row }">
-            <el-tag type="success">{{ row.post_count }}</el-tag>
+            <el-tag type="success">{{ row.post_count ?? 0 }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="created_at" label="创建时间" width="180">
@@ -196,22 +196,27 @@ const getParentName = (parentId: number) => {
 }
 
 // 扁平化树形数据用于表格展示
-const flattenTree = (categories: any[], level = 0): any[] => {
-  let flattened = []
-
-  categories.forEach(category => {
-    const flatCategory = {
-      ...category,
-      hasChildren: category.children && category.children.length > 0
-    }
-    flattened.push(flatCategory)
-
-    if (category.children) {
-      flattened = flattened.concat(flattenTree(category.children, level + 1))
-    }
-  })
-
-  return flattened
+// Element Plus 树形表格需要扁平的数组，但保留 children 属性用于展示层级
+const flattenTree = (categories: any[]): any[] => {
+  const result: any[] = []
+  
+  const process = (list: any[]) => {
+    list.forEach(item => {
+      const { children, ...rest } = item
+      result.push({
+        ...rest,
+        children: children && children.length > 0 ? children : undefined,
+        hasChildren: children && children.length > 0
+      })
+      
+      if (children && children.length > 0) {
+        process(children)
+      }
+    })
+  }
+  
+  process(categories)
+  return result
 }
 
 // 加载数据
