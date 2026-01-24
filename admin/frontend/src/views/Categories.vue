@@ -31,9 +31,9 @@
       >
         <el-table-column prop="name" label="分类名称" min-width="200">
           <template #default="{ row }">
-            <div class="category-name">
+            <div class="category-name" @click="toggleExpand(row)">
               <span>{{ row.name }}</span>
-              <el-tag v-if="row.parent_id" size="small" type="info" style="margin-left: 8px">
+              <el-tag v-if="row.parent_id" size="small" type="info" style="margin-left: 8px" @click.stop>
                 子分类
               </el-tag>
             </div>
@@ -52,13 +52,13 @@
         </el-table-column>
         <el-table-column label="操作" width="250" fixed="right">
           <template #default="{ row }">
-            <el-button type="primary" link :icon="Plus" @click="handleCreateChild(row)">
+            <el-button type="primary" link :icon="Plus" @click.stop="handleCreateChild(row)">
               添加子分类
             </el-button>
-            <el-button type="primary" link :icon="Edit" @click="handleEdit(row)">
+            <el-button type="primary" link :icon="Edit" @click.stop="handleEdit(row)">
               编辑
             </el-button>
-            <el-button type="danger" link :icon="Delete" @click="handleDelete(row)">
+            <el-button type="danger" link :icon="Delete" @click.stop="handleDelete(row)">
               删除
             </el-button>
           </template>
@@ -226,6 +226,20 @@ const handleExpandChange = (row: any, expanded: boolean) => {
   }
 }
 
+// 切换展开状态（点击分类名称时触发）
+const toggleExpand = (row: any) => {
+  if (!row.children || row.children.length === 0) {
+    return // 没有子分类时不需要展开
+  }
+
+  const index = expandedKeys.value.indexOf(row.id)
+  if (index > -1) {
+    expandedKeys.value.splice(index, 1)
+  } else {
+    expandedKeys.value.push(row.id)
+  }
+}
+
 // 新建根分类
 const handleCreate = () => {
   currentEditId.value = null
@@ -376,6 +390,15 @@ onMounted(() => {
     display: flex;
     align-items: center;
     gap: 8px;
+    cursor: pointer;
+    user-select: none;
+    padding: 4px 0;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: rgba(64, 158, 255, 0.05);
+    }
 
     span {
       font-weight: 500;
@@ -401,7 +424,6 @@ onMounted(() => {
 
     &:hover {
       color: #409eff;
-      background-color: rgba(64, 158, 255, 0.1);
       transform: scale(1.15);
     }
 
