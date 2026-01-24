@@ -27,15 +27,20 @@
         row-key="id"
         :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
         :expand-row-keys="expandedKeys"
+        :default-expand-all="true"
         @expand-change="handleExpandChange"
+        @row-click="handleRowClick"
       >
         <el-table-column prop="name" label="分类名称" min-width="200">
           <template #default="{ row }">
-            <div class="category-name">
+            <div class="category-name" :class="{ 'clickable': row.hasChildren }">
               <span>{{ row.name }}</span>
               <el-tag v-if="row.parent_id" size="small" type="info" style="margin-left: 8px">
                 子分类
               </el-tag>
+              <el-icon v-if="row.hasChildren" class="expand-hint" :size="14" style="margin-left: 6px">
+                <component :is="expandedKeys.includes(row.id) ? ArrowDown : ArrowRight" />
+              </el-icon>
             </div>
           </template>
         </el-table-column>
@@ -52,13 +57,13 @@
         </el-table-column>
         <el-table-column label="操作" width="250" fixed="right">
           <template #default="{ row }">
-            <el-button type="primary" link :icon="Plus" @click="handleCreateChild(row)">
+            <el-button type="primary" link :icon="Plus" @click.stop="handleCreateChild(row)">
               添加子分类
             </el-button>
-            <el-button type="primary" link :icon="Edit" @click="handleEdit(row)">
+            <el-button type="primary" link :icon="Edit" @click.stop="handleEdit(row)">
               编辑
             </el-button>
-            <el-button type="danger" link :icon="Delete" @click="handleDelete(row)">
+            <el-button type="danger" link :icon="Delete" @click.stop="handleDelete(row)">
               删除
             </el-button>
           </template>
@@ -126,7 +131,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
-import { Plus, Edit, Delete, Search } from '@element-plus/icons-vue'
+import { Plus, Edit, Delete, Search, ArrowDown, ArrowRight } from '@element-plus/icons-vue'
 import { getCategoryTree, getCategoryList, createCategory, updateCategory, deleteCategory, getCategories } from '@/api'
 
 const formRef = ref<FormInstance>()
@@ -245,6 +250,18 @@ const handleExpandChange = (row: any, expanded: boolean) => {
     const index = expandedKeys.value.indexOf(row.id)
     if (index > -1) {
       expandedKeys.value.splice(index, 1)
+    }
+  }
+}
+
+// 点击行触发展开/折叠
+const handleRowClick = (row: any) => {
+  if (row.hasChildren) {
+    const index = expandedKeys.value.indexOf(row.id)
+    if (index > -1) {
+      expandedKeys.value.splice(index, 1)
+    } else {
+      expandedKeys.value.push(row.id)
     }
   }
 }
@@ -398,6 +415,31 @@ onMounted(() => {
   .category-name {
     display: flex;
     align-items: center;
+    cursor: default;
+
+    &.clickable {
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s;
+
+      &:hover {
+        color: #409eff;
+
+        .expand-hint {
+          opacity: 1;
+        }
+      }
+    }
+
+    .expand-hint {
+      opacity: 0.6;
+      transition: opacity 0.2s;
+    }
   }
+}
+
+// 让表格行可点击，增加视觉反馈
+:deep(.el-table__row) {
+  cursor: pointer;
 }
 </style>
