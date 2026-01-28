@@ -49,10 +49,17 @@
         <el-table-column type="selection" width="55" :reserve-selection="true" />
         <el-table-column prop="name" label="分类名称" min-width="200">
           <template #default="{ row }">
-            <div class="category-name" @click="toggleExpand(row)">
-              <span>{{ row.name }}</span>
-              <el-tag v-if="row.parent_id" size="small" type="info" style="margin-left: 8px" @click.stop>
-                子分类
+            <div
+              class="category-name"
+              :class="{
+                'parent-category': !row.parent_id,
+                'child-category': row.parent_id
+              }"
+              @click="toggleExpand(row)"
+            >
+              <span class="category-text">{{ row.name }}</span>
+              <el-tag v-if="row.children && row.children.length > 0" size="small" type="info" style="margin-left: 8px" @click.stop>
+                {{ row.children.length }} 子分类
               </el-tag>
             </div>
           </template>
@@ -597,13 +604,38 @@ onMounted(() => {
     gap: 8px;
     cursor: pointer;
     user-select: none;
-    padding: 4px 0;
+    padding: 8px 0;
+    transition: all 0.2s ease;
 
-    span {
+    .category-text {
       font-weight: 500;
       font-size: 14px;
       line-height: 1.5;
       vertical-align: middle;
+    }
+
+    // 父分类样式
+    &.parent-category {
+      .category-text {
+        font-size: 16px;
+        font-weight: 600;
+        color: #303133;
+      }
+    }
+
+    // 子分类样式
+    &.child-category {
+      .category-text {
+        font-size: 14px;
+        font-weight: 400;
+        color: #606266;
+      }
+    }
+
+    &:hover {
+      .category-text {
+        color: #409eff;
+      }
     }
   }
 
@@ -611,8 +643,8 @@ onMounted(() => {
   :deep(.el-table__expand-icon) {
     color: #909399;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    margin: 0;
-    padding: 6px;
+    margin-right: 8px;
+    padding: 4px;
     border-radius: 4px;
     cursor: pointer;
     display: inline-flex;
@@ -623,7 +655,8 @@ onMounted(() => {
 
     &:hover {
       color: #409eff;
-      transform: scale(1.15);
+      background-color: #ecf5ff;
+      transform: scale(1.1);
     }
 
     &:active {
@@ -632,11 +665,11 @@ onMounted(() => {
 
     &.el-table__expand-icon--expanded {
       color: #409eff;
-      transform: rotate(90deg) scale(1.1);
+      transform: rotate(90deg);
     }
 
     svg {
-      font-size: 14px;
+      font-size: 12px;
       font-weight: 600;
       display: block;
     }
@@ -663,13 +696,22 @@ onMounted(() => {
       background-color: #f5f7fa !important;
     }
 
-    // 子分类行的背景色调整
-    &[class*='el-table__row--level-1'] {
-      background-color: #fafafa;
+    // 子分类行的背景色调整 - 第一层级子分类
+    &[class*='el-table__row--level-1'] > td {
+      background-color: #f9fafb;
+
+      &:hover {
+        background-color: #f0f2f5 !important;
+      }
     }
 
-    &[class*='el-table__row--level-2'] {
-      background-color: #f5f5f5;
+    // 子分类行的背景色调整 - 第二层级子分类
+    &[class*='el-table__row--level-2'] > td {
+      background-color: #f5f6f7;
+
+      &:hover {
+        background-color: #eef0f2 !important;
+      }
     }
   }
 
