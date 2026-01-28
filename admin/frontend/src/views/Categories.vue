@@ -601,25 +601,25 @@ onMounted(() => {
   .category-name {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     cursor: pointer;
     user-select: none;
-    padding: 8px 0;
+    padding: 6px 0;
     transition: all 0.2s ease;
 
     .category-text {
       font-weight: 500;
       font-size: 14px;
-      line-height: 1.5;
+      line-height: 1.6;
       vertical-align: middle;
     }
 
     // 父分类样式
     &.parent-category {
       .category-text {
-        font-size: 16px;
+        font-size: 15px;
         font-weight: 600;
-        color: #303133;
+        color: #1f2937;
       }
     }
 
@@ -628,24 +628,22 @@ onMounted(() => {
       .category-text {
         font-size: 14px;
         font-weight: 400;
-        color: #606266;
+        color: #6b7280;
       }
     }
 
     &:hover {
       .category-text {
-        color: #409eff;
+        color: #3b82f6;
       }
     }
   }
 
   // 优化树形表格展开/折叠图标样式
   :deep(.el-table__expand-icon) {
-    color: #909399;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    margin-right: 8px;
-    padding: 4px;
-    border-radius: 4px;
+    color: #9ca3af;
+    transition: all 0.25s ease;
+    margin-right: 4px;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
@@ -654,28 +652,22 @@ onMounted(() => {
     line-height: 1;
 
     &:hover {
-      color: #409eff;
-      background-color: #ecf5ff;
-      transform: scale(1.1);
-    }
-
-    &:active {
-      transform: scale(0.95);
+      color: #3b82f6;
     }
 
     &.el-table__expand-icon--expanded {
-      color: #409eff;
+      color: #3b82f6;
       transform: rotate(90deg);
     }
 
     svg {
-      font-size: 12px;
-      font-weight: 600;
+      font-size: 14px;
       display: block;
+      transition: transform 0.25s ease;
     }
   }
 
-  // 确保第一列单元格内容垂直居中
+  // 确保第一列单元格内容垂直居中和对齐
   :deep(.el-table td.el-table__cell) {
     vertical-align: middle;
 
@@ -683,35 +675,37 @@ onMounted(() => {
       .cell {
         display: flex;
         align-items: center;
-        line-height: 1.5;
+        justify-content: center;
+        padding: 0;
       }
+    }
+  }
+
+  // 优化分类名称列的对齐
+  :deep(.el-table__body .el-table__row td:nth-child(2)) {
+    .cell {
+      display: flex !important;
+      align-items: center;
+      padding: 0 8px;
+      gap: 0;
     }
   }
 
   // 优化表格行样式
   :deep(.el-table__row) {
-    transition: background-color 0.2s ease;
+    transition: all 0.2s ease;
 
     &:hover > td {
-      background-color: #f5f7fa !important;
+      background-color: #f8fafc !important;
     }
 
     // 子分类行的背景色调整 - 第一层级子分类
     &[class*='el-table__row--level-1'] > td {
-      background-color: #f9fafb;
-
-      &:hover {
-        background-color: #f0f2f5 !important;
-      }
+      background-color: #fafbfc;
     }
 
-    // 子分类行的背景色调整 - 第二层级子分类
-    &[class*='el-table__row--level-2'] > td {
-      background-color: #f5f6f7;
-
-      &:hover {
-        background-color: #eef0f2 !important;
-      }
+    &[class*='el-table__row--level-1']:hover > td {
+      background-color: #f5f7fa !important;
     }
   }
 
@@ -724,7 +718,26 @@ onMounted(() => {
   // 优化文章数量标签
   :deep(.el-tag) {
     font-weight: 500;
-    letter-spacing: 0.5px;
+    font-size: 12px;
+    padding: 2px 8px;
+    height: auto;
+    line-height: 1.4;
+  }
+
+  // 优化整体表格样式
+  :deep(.el-table) {
+    font-size: 14px;
+
+    .el-table__header th {
+      background-color: #f8fafc;
+      color: #64748b;
+      font-weight: 600;
+      padding: 12px 0;
+    }
+
+    .el-table__body td {
+      padding: 10px 0;
+    }
   }
 
   // 批量添加样式
